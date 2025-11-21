@@ -3,6 +3,8 @@
 .env
 .env.local
 .env.*.local
+.envrc
+.python-version
 
 # macOS
 .DS_Store
@@ -19,6 +21,18 @@ venv/
 env/
 ENV/
 .venv
+.venv*/
+pip-wheel-metadata/
+*.egg-info/
+build/
+dist/
+.mypy_cache/
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+.ruff_cache/
+*.log
 
 # IDE
 .vscode/
@@ -26,3 +40,19 @@ ENV/
 *.swp
 *.swo
 *~
+
+# Node / Frontend
+dashboard/node_modules/
+dashboard/.next/
+dashboard/out/
+dashboard/.turbo/
+dashboard/.vercel/
+dashboard/.env*
+dashboard/package-lock.json
+dashboard/yarn.lock
+dashboard/pnpm-lock.yaml
+
+# Logs / Temp
+logs/
+temp/
+tmp/
