@@ -126,17 +126,17 @@ Update the file after completing each sub-task, not just after completing an ent
   - [x] 2.8 Create `bugbridge/database/connection.py` with async database connection management using SQLAlchemy and asyncpg
   - [ ] 2.9 Write unit tests for all Pydantic models (`tests/test_models.py`)
 
-- [ ] 3.0 Core Infrastructure & Configuration
-  - [ ] 3.1 Create `bugbridge/config.py` to load and validate environment variables using `python-dotenv`
-  - [ ] 3.2 Implement configuration classes for Canny.io (API key, subdomain, board ID, sync interval)
-  - [ ] 3.3 Implement configuration classes for Jira MCP (server URL, project key, resolution statuses)
-  - [ ] 3.4 Implement configuration classes for XAI (API key, model selection, temperature)
-  - [ ] 3.5 Implement configuration classes for Database (connection URL)
-  - [ ] 3.6 Implement configuration classes for Reporting (schedule, recipients)
-  - [ ] 3.7 Implement configuration classes for Agent settings (retry attempts, backoff, timeout)
-  - [ ] 3.8 Create `bugbridge/utils/logging.py` with structured logging configuration
-  - [ ] 3.9 Create `bugbridge/utils/retry.py` with exponential backoff retry decorator/utility
-  - [ ] 3.10 Create `bugbridge/utils/validators.py` with input validation utilities
+- [x] 3.0 Core Infrastructure & Configuration
+  - [x] 3.1 Create `bugbridge/config.py` to load and validate environment variables using `python-dotenv`
+  - [x] 3.2 Implement configuration classes for Canny.io (API key, subdomain, board ID, sync interval)
+  - [x] 3.3 Implement configuration classes for Jira MCP (server URL, project key, resolution statuses)
+  - [x] 3.4 Implement configuration classes for XAI (API key, model selection, temperature)
+  - [x] 3.5 Implement configuration classes for Database (connection URL)
+  - [x] 3.6 Implement configuration classes for Reporting (schedule, recipients)
+  - [x] 3.7 Implement configuration classes for Agent settings (retry attempts, backoff, timeout)
+  - [x] 3.8 Create `bugbridge/utils/logging.py` with structured logging configuration
+  - [x] 3.9 Create `bugbridge/utils/retry.py` with exponential backoff retry decorator/utility
+  - [x] 3.10 Create `bugbridge/utils/validators.py` with input validation utilities
   - [ ] 3.11 Write tests for configuration loading and validation
 
 - [ ] 4.0 Feedback Collection Module (Canny.io Integration)
