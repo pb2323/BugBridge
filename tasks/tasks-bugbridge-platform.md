@@ -139,17 +139,17 @@ Update the file after completing each sub-task, not just after completing an ent
   - [x] 3.10 Create `bugbridge/utils/validators.py` with input validation utilities
   - [ ] 3.11 Write tests for configuration loading and validation
 
-- [ ] 4.0 Feedback Collection Module (Canny.io Integration)
-  - [ ] 4.1 Create `bugbridge/integrations/canny.py` with Canny.io API client class using httpx (async)
-  - [ ] 4.2 Implement `list_posts()` method to retrieve posts from Canny.io API with pagination support
-  - [ ] 4.3 Implement `get_post_details()` method to retrieve detailed post information
-  - [ ] 4.4 Implement `post_comment()` method to post comments to Canny.io feedback posts
-  - [ ] 4.5 Add rate limiting handling with exponential backoff for Canny.io API calls
-  - [ ] 4.6 Create `bugbridge/tools/canny_tools.py` with LangChain tools: `ListPostsTool`, `GetPostDetailsTool`, `PostCommentTool`
-  - [ ] 4.7 Implement `bugbridge/agents/collection.py` - Feedback Collection Agent that uses Canny.io tools to collect feedback
-  - [ ] 4.8 Implement filtering logic to avoid duplicate posts (check against database)
+- [x] 4.0 Feedback Collection Module (Canny.io Integration)
+  - [x] 4.1 Create `bugbridge/integrations/canny.py` with Canny.io API client class using httpx (async)
+  - [x] 4.2 Implement `list_posts()` method to retrieve posts from Canny.io API with pagination support
+  - [x] 4.3 Implement `get_post_details()` method to retrieve detailed post information
+  - [x] 4.4 Implement `post_comment()` method to post comments to Canny.io feedback posts
+  - [x] 4.5 Add rate limiting handling with exponential backoff for Canny.io API calls
+  - [x] 4.6 Create `bugbridge/tools/canny_tools.py` with LangChain tools: `ListPostsTool`, `GetPostDetailsTool`, `PostCommentTool`
+  - [x] 4.7 Implement `bugbridge/agents/collection.py` - Feedback Collection Agent that uses Canny.io tools to collect feedback
+  - [x] 4.8 Implement filtering logic to avoid duplicate posts (check against database)
   - [ ] 4.9 Implement configurable sync interval mechanism (using apscheduler or similar)
-  - [ ] 4.10 Implement backfilling capability for historical feedback data
+  - [x] 4.10 Implement backfilling capability for historical feedback data
   - [ ] 4.11 Write unit tests for Canny.io API client and tools
   - [ ] 4.12 Write integration tests for Feedback Collection Agent
 
