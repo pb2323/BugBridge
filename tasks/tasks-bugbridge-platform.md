@@ -115,15 +115,15 @@ Update the file after completing each sub-task, not just after completing an ent
   - [x] 1.7 Set up virtual environment and install dependencies
   - [x] 1.8 Create `.gitignore` file to exclude virtual environment, `.env`, `__pycache__`, etc.
 
-- [ ] 2.0 Data Models & Database Schema
-  - [ ] 2.1 Create `bugbridge/models/feedback.py` with `FeedbackPost` Pydantic model (post_id, board_id, title, content, author_id, author_name, created_at, updated_at, votes, comments_count, status, url, tags, collected_at)
-  - [ ] 2.2 Create `bugbridge/models/analysis.py` with `BugDetectionResult`, `SentimentAnalysisResult`, and `PriorityScoreResult` Pydantic models following PRD specifications
-  - [ ] 2.3 Create `bugbridge/models/state.py` with `BugBridgeState` TypedDict for LangGraph workflow state
-  - [ ] 2.4 Create `bugbridge/models/jira.py` with Jira ticket related models
-  - [ ] 2.5 Create `bugbridge/database/models.py` with SQLAlchemy ORM models (FeedbackPost, AnalysisResult, JiraTicket, WorkflowState, Notification, Report)
-  - [ ] 2.6 Create `bugbridge/database/schema.py` with PostgreSQL schema SQL following PRD specifications (CREATE TABLE statements for all tables)
+- [x] 2.0 Data Models & Database Schema
+  - [x] 2.1 Create `bugbridge/models/feedback.py` with `FeedbackPost` Pydantic model (post_id, board_id, title, content, author_id, author_name, created_at, updated_at, votes, comments_count, status, url, tags, collected_at)
+  - [x] 2.2 Create `bugbridge/models/analysis.py` with `BugDetectionResult`, `SentimentAnalysisResult`, and `PriorityScoreResult` Pydantic models following PRD specifications
+  - [x] 2.3 Create `bugbridge/models/state.py` with `BugBridgeState` TypedDict for LangGraph workflow state
+  - [x] 2.4 Create `bugbridge/models/jira.py` with Jira ticket related models
+  - [x] 2.5 Create `bugbridge/database/models.py` with SQLAlchemy ORM models (FeedbackPost, AnalysisResult, JiraTicket, WorkflowState, Notification, Report)
+  - [x] 2.6 Create `bugbridge/database/schema.py` with PostgreSQL schema SQL following PRD specifications (CREATE TABLE statements for all tables)
   - [ ] 2.7 Create database migration scripts or Alembic configuration for schema management
-  - [ ] 2.8 Create `bugbridge/database/connection.py` with async database connection management using SQLAlchemy and asyncpg
+  - [x] 2.8 Create `bugbridge/database/connection.py` with async database connection management using SQLAlchemy and asyncpg
   - [ ] 2.9 Write unit tests for all Pydantic models (`tests/test_models.py`)
 
 - [ ] 3.0 Core Infrastructure & Configuration
