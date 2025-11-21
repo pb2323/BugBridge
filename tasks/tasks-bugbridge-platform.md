@@ -102,8 +102,8 @@ Update the file after completing each sub-task, not just after completing an ent
 
 ## Tasks
 
-- [ ] 0.0 Create feature branch
-  - [ ] 0.1 Create and checkout a new branch for this feature (e.g., `git checkout -b feature/bugbridge-platform`)
+- [x] 0.0 Create feature branch
+  - [x] 0.1 Create and checkout a new branch for this feature (e.g., `git checkout -b feature/bugbridge-platform`)
 
 - [ ] 1.0 Project Setup & Foundation
   - [ ] 1.1 Create project directory structure (`bugbridge/`, `bugbridge/agents/`, `bugbridge/models/`, `bugbridge/integrations/`, `bugbridge/workflows/`, `bugbridge/database/`, `bugbridge/tools/`, `bugbridge/utils/`, `tests/`)
