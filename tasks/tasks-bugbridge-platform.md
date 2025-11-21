@@ -105,15 +105,15 @@ Update the file after completing each sub-task, not just after completing an ent
 - [x] 0.0 Create feature branch
   - [x] 0.1 Create and checkout a new branch for this feature (e.g., `git checkout -b feature/bugbridge-platform`)
 
-- [ ] 1.0 Project Setup & Foundation
-  - [ ] 1.1 Create project directory structure (`bugbridge/`, `bugbridge/agents/`, `bugbridge/models/`, `bugbridge/integrations/`, `bugbridge/workflows/`, `bugbridge/database/`, `bugbridge/tools/`, `bugbridge/utils/`, `tests/`)
-  - [ ] 1.2 Create `requirements.txt` with all dependencies: `langgraph`, `langchain`, `langchain-community`, `pydantic`, `httpx`, `python-dotenv`, `sqlalchemy`, `asyncpg`, `apscheduler`, `xai-python` (or create custom XAI wrapper)
-  - [ ] 1.3 Create `.env.example` file with all required environment variables (Canny.io, Jira MCP, XAI, Database, Reporting configs)
-  - [ ] 1.4 Create `pyproject.toml` or `setup.py` for project configuration (if using modern Python packaging)
-  - [ ] 1.5 Create basic `README.md` with project description, setup instructions, and usage guide
-  - [ ] 1.6 Initialize all `__init__.py` files in package directories
-  - [ ] 1.7 Set up virtual environment and install dependencies
-  - [ ] 1.8 Create `.gitignore` file to exclude virtual environment, `.env`, `__pycache__`, etc.
+- [x] 1.0 Project Setup & Foundation
+  - [x] 1.1 Create project directory structure (`bugbridge/`, `bugbridge/agents/`, `bugbridge/models/`, `bugbridge/integrations/`, `bugbridge/workflows/`, `bugbridge/database/`, `bugbridge/tools/`, `bugbridge/utils/`, `tests/`)
+  - [x] 1.2 Create `requirements.txt` with all dependencies: `langgraph`, `langchain`, `langchain-community`, `pydantic`, `httpx`, `python-dotenv`, `sqlalchemy`, `asyncpg`, `apscheduler`, `xai-python` (or create custom XAI wrapper)
+  - [x] 1.3 Create `.env.example` file with all required environment variables (Canny.io, Jira MCP, XAI, Database, Reporting configs)
+  - [x] 1.4 Create `pyproject.toml` or `setup.py` for project configuration (if using modern Python packaging)
+  - [x] 1.5 Create basic `README.md` with project description, setup instructions, and usage guide
+  - [x] 1.6 Initialize all `__init__.py` files in package directories
+  - [x] 1.7 Set up virtual environment and install dependencies
+  - [x] 1.8 Create `.gitignore` file to exclude virtual environment, `.env`, `__pycache__`, etc.
 
 - [ ] 2.0 Data Models & Database Schema
   - [ ] 2.1 Create `bugbridge/models/feedback.py` with `FeedbackPost` Pydantic model (post_id, board_id, title, content, author_id, author_name, created_at, updated_at, votes, comments_count, status, url, tags, collected_at)
