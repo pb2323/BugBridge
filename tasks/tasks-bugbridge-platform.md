@@ -1,0 +1,286 @@
+# Task List: BugBridge Platform Implementation
+
+**Feature:** BugBridge Platform - AI-Powered Feedback Management System  
+**Based on:** PRD v1.0 (tasks/prd-bugbridge-platform.md)  
+**Date:** November 2025
+
+---
+
+## Relevant Files
+
+- `bugbridge/` - Main application directory (to be created)
+- `bugbridge/__init__.py` - Package initialization
+- `bugbridge/config.py` - Configuration management and environment variable handling
+- `bugbridge/models/__init__.py` - Models package initialization
+- `bugbridge/models/feedback.py` - FeedbackPost and related Pydantic models
+- `bugbridge/models/analysis.py` - BugDetectionResult, SentimentAnalysisResult, PriorityScoreResult Pydantic models
+- `bugbridge/models/state.py` - BugBridgeState TypedDict for LangGraph
+- `bugbridge/models/jira.py` - Jira ticket related models
+- `bugbridge/database/__init__.py` - Database package initialization
+- `bugbridge/database/models.py` - SQLAlchemy ORM models
+- `bugbridge/database/schema.py` - Database schema definitions and migrations
+- `bugbridge/database/connection.py` - Database connection and session management
+- `bugbridge/agents/__init__.py` - Agents package initialization
+- `bugbridge/agents/base.py` - Base agent class and common functionality
+- `bugbridge/agents/collection.py` - Feedback Collection Agent
+- `bugbridge/agents/bug_detection.py` - Bug Detection Agent
+- `bugbridge/agents/sentiment.py` - Sentiment Analysis Agent
+- `bugbridge/agents/priority.py` - Priority Scoring Agent
+- `bugbridge/agents/jira_creation.py` - Jira Creation Agent
+- `bugbridge/agents/monitoring.py` - Monitoring Agent
+- `bugbridge/agents/notification.py` - Notification Agent
+- `bugbridge/agents/reporting.py` - Reporting Agent
+- `bugbridge/integrations/__init__.py` - Integrations package initialization
+- `bugbridge/integrations/canny.py` - Canny.io API client and tools
+- `bugbridge/integrations/xai.py` - XAI API client wrapper for LangChain
+- `bugbridge/integrations/mcp_jira.py` - MCP Jira client wrapper
+- `bugbridge/workflows/__init__.py` - Workflows package initialization
+- `bugbridge/workflows/main.py` - Main LangGraph workflow for feedback processing
+- `bugbridge/workflows/reporting.py` - LangGraph workflow for daily reports
+- `bugbridge/tools/__init__.py` - Tools package initialization
+- `bugbridge/tools/canny_tools.py` - LangChain tools for Canny.io operations
+- `bugbridge/tools/jira_tools.py` - LangChain tools for Jira operations
+- `bugbridge/utils/__init__.py` - Utilities package initialization
+- `bugbridge/utils/logging.py` - Logging configuration
+- `bugbridge/utils/retry.py` - Retry logic and exponential backoff utilities
+- `bugbridge/utils/validators.py` - Input validation utilities
+- `bugbridge/main.py` - Main application entry point
+- `tests/` - Test directory (to be created)
+- `tests/__init__.py` - Test package initialization
+- `tests/test_models.py` - Unit tests for Pydantic models
+- `tests/test_agents.py` - Unit tests for agents
+- `tests/test_integrations.py` - Integration tests for external APIs
+- `tests/test_workflows.py` - End-to-end workflow tests
+- `.env.example` - Example environment variables file
+- `requirements.txt` - Python package dependencies
+- `pyproject.toml` - Python project configuration (optional, for modern Python projects)
+- `README.md` - Project documentation
+- `Dockerfile` - Docker containerization (for production deployment)
+- `docker-compose.yml` - Docker Compose setup for local development
+
+### Notes
+
+- Unit tests should be placed alongside the code files they are testing or in the `tests/` directory following the same structure.
+- Use `pytest` for running tests: `pytest tests/` (run all tests) or `pytest tests/test_agents.py` (run specific test file).
+- Ensure all tests are async-compatible since the system uses asyncio.
+
+---
+
+## Instructions for Completing Tasks
+
+**IMPORTANT:** As you complete each task, you must check it off in this markdown file by changing `- [ ]` to `- [x]`. This helps track progress and ensures you don't skip any steps.
+
+Example:
+- `- [ ] 1.1 Read file` → `- [x] 1.1 Read file` (after completing)
+
+Update the file after completing each sub-task, not just after completing an entire parent task.
+
+---
+
+## Tasks
+
+- [ ] 0.0 Create feature branch
+  - [ ] 0.1 Create and checkout a new branch for this feature (e.g., `git checkout -b feature/bugbridge-platform`)
+
+- [ ] 1.0 Project Setup & Foundation
+  - [ ] 1.1 Create project directory structure (`bugbridge/`, `bugbridge/agents/`, `bugbridge/models/`, `bugbridge/integrations/`, `bugbridge/workflows/`, `bugbridge/database/`, `bugbridge/tools/`, `bugbridge/utils/`, `tests/`)
+  - [ ] 1.2 Create `requirements.txt` with all dependencies: `langgraph`, `langchain`, `langchain-community`, `pydantic`, `httpx`, `python-dotenv`, `sqlalchemy`, `asyncpg`, `apscheduler`, `xai-python` (or create custom XAI wrapper)
+  - [ ] 1.3 Create `.env.example` file with all required environment variables (Canny.io, Jira MCP, XAI, Database, Reporting configs)
+  - [ ] 1.4 Create `pyproject.toml` or `setup.py` for project configuration (if using modern Python packaging)
+  - [ ] 1.5 Create basic `README.md` with project description, setup instructions, and usage guide
+  - [ ] 1.6 Initialize all `__init__.py` files in package directories
+  - [ ] 1.7 Set up virtual environment and install dependencies
+  - [ ] 1.8 Create `.gitignore` file to exclude virtual environment, `.env`, `__pycache__`, etc.
+
+- [ ] 2.0 Data Models & Database Schema
+  - [ ] 2.1 Create `bugbridge/models/feedback.py` with `FeedbackPost` Pydantic model (post_id, board_id, title, content, author_id, author_name, created_at, updated_at, votes, comments_count, status, url, tags, collected_at)
+  - [ ] 2.2 Create `bugbridge/models/analysis.py` with `BugDetectionResult`, `SentimentAnalysisResult`, and `PriorityScoreResult` Pydantic models following PRD specifications
+  - [ ] 2.3 Create `bugbridge/models/state.py` with `BugBridgeState` TypedDict for LangGraph workflow state
+  - [ ] 2.4 Create `bugbridge/models/jira.py` with Jira ticket related models
+  - [ ] 2.5 Create `bugbridge/database/models.py` with SQLAlchemy ORM models (FeedbackPost, AnalysisResult, JiraTicket, WorkflowState, Notification, Report)
+  - [ ] 2.6 Create `bugbridge/database/schema.py` with PostgreSQL schema SQL following PRD specifications (CREATE TABLE statements for all tables)
+  - [ ] 2.7 Create database migration scripts or Alembic configuration for schema management
+  - [ ] 2.8 Create `bugbridge/database/connection.py` with async database connection management using SQLAlchemy and asyncpg
+  - [ ] 2.9 Write unit tests for all Pydantic models (`tests/test_models.py`)
+
+- [ ] 3.0 Core Infrastructure & Configuration
+  - [ ] 3.1 Create `bugbridge/config.py` to load and validate environment variables using `python-dotenv`
+  - [ ] 3.2 Implement configuration classes for Canny.io (API key, subdomain, board ID, sync interval)
+  - [ ] 3.3 Implement configuration classes for Jira MCP (server URL, project key, resolution statuses)
+  - [ ] 3.4 Implement configuration classes for XAI (API key, model selection, temperature)
+  - [ ] 3.5 Implement configuration classes for Database (connection URL)
+  - [ ] 3.6 Implement configuration classes for Reporting (schedule, recipients)
+  - [ ] 3.7 Implement configuration classes for Agent settings (retry attempts, backoff, timeout)
+  - [ ] 3.8 Create `bugbridge/utils/logging.py` with structured logging configuration
+  - [ ] 3.9 Create `bugbridge/utils/retry.py` with exponential backoff retry decorator/utility
+  - [ ] 3.10 Create `bugbridge/utils/validators.py` with input validation utilities
+  - [ ] 3.11 Write tests for configuration loading and validation
+
+- [ ] 4.0 Feedback Collection Module (Canny.io Integration)
+  - [ ] 4.1 Create `bugbridge/integrations/canny.py` with Canny.io API client class using httpx (async)
+  - [ ] 4.2 Implement `list_posts()` method to retrieve posts from Canny.io API with pagination support
+  - [ ] 4.3 Implement `get_post_details()` method to retrieve detailed post information
+  - [ ] 4.4 Implement `post_comment()` method to post comments to Canny.io feedback posts
+  - [ ] 4.5 Add rate limiting handling with exponential backoff for Canny.io API calls
+  - [ ] 4.6 Create `bugbridge/tools/canny_tools.py` with LangChain tools: `ListPostsTool`, `GetPostDetailsTool`, `PostCommentTool`
+  - [ ] 4.7 Implement `bugbridge/agents/collection.py` - Feedback Collection Agent that uses Canny.io tools to collect feedback
+  - [ ] 4.8 Implement filtering logic to avoid duplicate posts (check against database)
+  - [ ] 4.9 Implement configurable sync interval mechanism (using apscheduler or similar)
+  - [ ] 4.10 Implement backfilling capability for historical feedback data
+  - [ ] 4.11 Write unit tests for Canny.io API client and tools
+  - [ ] 4.12 Write integration tests for Feedback Collection Agent
+
+- [ ] 5.0 AI Agent System Architecture (LangGraph & LangChain Setup)
+  - [ ] 5.1 Create `bugbridge/integrations/xai.py` with XAI API wrapper/LLM class compatible with LangChain (if LangChain doesn't have native XAI support, create custom `ChatXAI` class)
+  - [ ] 5.2 Configure XAI LLM with API key, model selection (grok-beta or grok-2), and temperature=0 for determinism
+  - [ ] 5.3 Create `bugbridge/agents/base.py` with base agent class that provides common functionality (logging, error handling, state management)
+  - [ ] 5.4 Implement structured output helper using Pydantic models with XAI LLM
+  - [ ] 5.5 Create `bugbridge/workflows/main.py` and set up LangGraph `StateGraph` with `BugBridgeState` TypedDict
+  - [ ] 5.6 Define workflow nodes (placeholder functions for now): `collect_feedback`, `analyze_bug`, `analyze_sentiment`, `calculate_priority`, `create_jira_ticket`, `monitor_status`, `notify_customer`
+  - [ ] 5.7 Define workflow edges between nodes (sequential flow for main pipeline)
+  - [ ] 5.8 Implement conditional edges logic (e.g., should_create_ticket based on priority score)
+  - [ ] 5.9 Create workflow compilation and execution infrastructure
+  - [ ] 5.10 Implement workflow state persistence to database (save/load workflow state)
+  - [ ] 5.11 Write unit tests for XAI integration and base agent functionality
+
+- [ ] 6.0 Analysis Agents Implementation (Bug Detection, Sentiment, Priority)
+  - [ ] 6.1 Implement `bugbridge/agents/bug_detection.py` - Bug Detection Agent:
+    - [ ] 6.1.1 Create prompt template following PRD specifications (Section 6.4.2)
+    - [ ] 6.1.2 Implement structured output parsing using `BugDetectionResult` Pydantic model
+    - [ ] 6.1.3 Integrate with XAI LLM using structured outputs
+    - [ ] 6.1.4 Implement LangGraph node function that updates state with bug detection results
+    - [ ] 6.1.5 Add deterministic behavior (temperature=0, structured outputs)
+  - [ ] 6.2 Implement `bugbridge/agents/sentiment.py` - Sentiment Analysis Agent:
+    - [ ] 6.2.1 Create prompt template following PRD specifications (Section 6.4.3)
+    - [ ] 6.2.2 Implement structured output parsing using `SentimentAnalysisResult` Pydantic model
+    - [ ] 6.2.3 Integrate with XAI LLM using structured outputs
+    - [ ] 6.2.4 Implement LangGraph node function that updates state with sentiment analysis
+    - [ ] 6.2.5 Add deterministic behavior
+  - [ ] 6.3 Implement `bugbridge/agents/priority.py` - Priority Scoring Agent:
+    - [ ] 6.3.1 Create prompt template following PRD specifications (Section 6.4.4)
+    - [ ] 6.3.2 Implement engagement score calculation from post data (votes, comments)
+    - [ ] 6.3.3 Create `CalculateEngagementTool` LangChain tool
+    - [ ] 6.3.4 Implement structured output parsing using `PriorityScoreResult` Pydantic model
+    - [ ] 6.3.5 Integrate with XAI LLM using structured outputs
+    - [ ] 6.3.6 Implement LangGraph node function that updates state with priority score
+    - [ ] 6.3.7 Add configurable priority weights support
+    - [ ] 6.3.8 Add burning issue detection logic
+  - [ ] 6.4 Wire up analysis agents in LangGraph workflow (`bugbridge/workflows/main.py`)
+  - [ ] 6.5 Write comprehensive unit tests for each analysis agent with mock LLM responses
+  - [ ] 6.6 Test deterministic behavior (same input produces same output)
+  - [ ] 6.7 Write integration tests for analysis pipeline (Feedback → Bug Detection → Sentiment → Priority)
+
+- [ ] 7.0 Jira Integration Module (MCP Client & Ticket Creation)
+  - [ ] 7.1 Study existing `mcp-atlassian` server structure and MCP protocol
+  - [ ] 7.2 Create `bugbridge/integrations/mcp_jira.py` with MCP client wrapper for Jira operations
+  - [ ] 7.3 Implement MCP connection handling (HTTP or WebSocket based on server configuration)
+  - [ ] 7.4 Create `bugbridge/tools/jira_tools.py` with LangChain tools for MCP Jira operations:
+    - [ ] 7.4.1 `CreateIssueTool` - wraps MCP create_issue function
+    - [ ] 7.4.2 `GetIssueTool` - wraps MCP get_issue function
+    - [ ] 7.4.3 `UpdateIssueTool` - wraps MCP update_issue function
+    - [ ] 7.4.4 `SearchIssuesTool` - wraps MCP search function (for monitoring)
+  - [ ] 7.5 Implement `bugbridge/agents/jira_creation.py` - Jira Creation Agent:
+    - [ ] 7.5.1 Gather analysis results from workflow state (bug detection, sentiment, priority)
+    - [ ] 7.5.2 Format Jira ticket description using template (include feedback content, user details, sentiment score, priority reasoning)
+    - [ ] 7.5.3 Map priority score to Jira priority level (Critical, High, Medium, Low)
+    - [ ] 7.5.4 Determine issue type (Bug vs. Story/Task) based on bug detection result
+    - [ ] 7.5.5 Generate labels based on analysis (sentiment, category, etc.)
+    - [ ] 7.5.6 Call MCP Jira tool to create ticket
+    - [ ] 7.5.7 Store Jira ticket ID and link back to Canny.io post in database
+    - [ ] 7.5.8 Update workflow state with Jira ticket information
+  - [ ] 7.6 Implement error handling for Jira API failures with retry logic
+  - [ ] 7.7 Implement ticket assignment logic (round-robin or based on component)
+  - [ ] 7.8 Wire up Jira Creation Agent in LangGraph workflow
+  - [ ] 7.9 Write unit tests for MCP client wrapper and Jira tools
+  - [ ] 7.10 Write integration tests for Jira Creation Agent (end-to-end: Feedback → Analysis → Jira Ticket)
+  - [ ] 7.11 Test with real MCP server (or mocked MCP responses)
+
+- [ ] 8.0 Monitoring & Notification Agents
+  - [ ] 8.1 Implement `bugbridge/agents/monitoring.py` - Monitoring Agent:
+    - [ ] 8.1.1 Create polling mechanism to check Jira ticket status at configured intervals
+    - [ ] 8.1.2 Implement status comparison logic (compare current status with previous)
+    - [ ] 8.1.3 Detect resolution statuses (Done, Resolved, Fixed, etc.) from configuration
+    - [ ] 8.1.4 Implement status change history tracking
+    - [ ] 8.1.5 Trigger notification workflow when resolution is detected
+    - [ ] 8.1.6 Implement LangGraph node for status monitoring
+    - [ ] 8.1.7 Add support for webhook-based real-time updates (if available)
+  - [ ] 8.2 Implement `bugbridge/agents/notification.py` - Notification Agent:
+    - [ ] 8.2.1 Create prompt template for generating customer replies (following PRD Section 6.4.7)
+    - [ ] 8.2.2 Implement reply generation using XAI LLM with structured/template-based output
+    - [ ] 8.2.3 Format reply message (include resolution confirmation, Jira ticket link, thank you)
+    - [ ] 8.2.4 Handle different resolution scenarios (fixed, won't fix, duplicate, etc.)
+    - [ ] 8.2.5 Use Canny.io API to post comment to original feedback post
+    - [ ] 8.2.6 Prevent duplicate notifications (check database for existing notifications)
+    - [ ] 8.2.7 Track notification status and delivery
+    - [ ] 8.2.8 Update workflow state to mark as "notified"
+  - [ ] 8.3 Wire up Monitoring and Notification agents in LangGraph workflow
+  - [ ] 8.4 Implement workflow loop for monitoring (poll until resolved, then notify)
+  - [ ] 8.5 Write unit tests for Monitoring Agent (mocked Jira status responses)
+  - [ ] 8.6 Write unit tests for Notification Agent (mocked LLM and Canny.io responses)
+  - [ ] 8.7 Write integration tests for full feedback loop (Collection → Analysis → Ticket → Resolution → Notification)
+
+- [ ] 9.0 Reporting Agent & Daily Summaries
+  - [ ] 9.1 Implement `bugbridge/agents/reporting.py` - Reporting Agent:
+    - [ ] 9.1.1 Create database query functions to aggregate daily metrics (new issues, bugs vs. features, sentiment trends, priority items, Jira tickets created/resolved, response times, resolution metrics)
+    - [ ] 9.1.2 Implement data aggregation logic (counts, percentages, averages, trends)
+    - [ ] 9.1.3 Create prompt template for natural language report summary generation using XAI LLM
+    - [ ] 9.1.4 Implement report formatting in Markdown with sections (following PRD requirements)
+    - [ ] 9.1.5 Generate report content: new issues, bugs vs. feature requests, sentiment trends, top priority items, ticket metrics, response times, resolution rates
+    - [ ] 9.1.6 Store generated reports in database for historical tracking
+  - [ ] 9.2 Create `bugbridge/workflows/reporting.py` - LangGraph workflow for daily report generation
+  - [ ] 9.3 Implement report scheduling using `apscheduler` (daily at configured time)
+  - [ ] 9.4 Implement report delivery mechanisms:
+    - [ ] 9.4.1 Email delivery (using SMTP or email service)
+    - [ ] 9.4.2 Slack integration (optional, for future)
+    - [ ] 9.4.3 File storage (save reports to filesystem or cloud storage)
+  - [ ] 9.5 Implement custom report filters (date range, category, etc.)
+  - [ ] 9.6 Create report generation command/endpoint for manual trigger
+  - [ ] 9.7 Write unit tests for Reporting Agent (mocked database queries and LLM)
+  - [ ] 9.8 Write integration tests for report generation with sample data
+
+- [ ] 10.0 Testing, Error Handling & Production Readiness
+  - [ ] 10.1 Error Handling & Resilience:
+    - [ ] 10.1.1 Implement comprehensive error handling for all API calls (Canny.io, XAI, Jira MCP) with retry logic
+    - [ ] 10.1.2 Implement dead letter queue mechanism for failed processing
+    - [ ] 10.1.3 Add alerting mechanism for critical failures (logging, email, etc.)
+    - [ ] 10.1.4 Implement manual intervention/retry capability for failed operations
+    - [ ] 10.1.5 Add input validation for all agent inputs
+    - [ ] 10.1.6 Implement LLM API failure fallback strategies
+  - [ ] 10.2 Comprehensive Testing:
+    - [ ] 10.2.1 Write unit tests for all agents (with mocked LLM and API responses)
+    - [ ] 10.2.2 Write integration tests for external API integrations (use sandbox/test accounts)
+    - [ ] 10.2.3 Write end-to-end tests for full workflow (Feedback → Analysis → Ticket → Resolution → Notification)
+    - [ ] 10.2.4 Test deterministic behavior (same inputs produce same outputs)
+    - [ ] 10.2.5 Test error scenarios and recovery
+    - [ ] 10.2.6 Test concurrent processing (if applicable)
+    - [ ] 10.2.7 Test database operations and transactions
+  - [ ] 10.3 Performance Optimization:
+    - [ ] 10.3.1 Optimize database queries (add indexes, query optimization)
+    - [ ] 10.3.2 Implement caching where appropriate (LLM responses, API responses - careful with determinism)
+    - [ ] 10.3.3 Optimize async operations (ensure proper async/await usage)
+    - [ ] 10.3.4 Profile and optimize slow operations
+  - [ ] 10.4 Monitoring & Observability:
+    - [ ] 10.4.1 Implement comprehensive logging (all agent decisions, API calls, errors)
+    - [ ] 10.4.2 Add metrics tracking (API usage, LLM costs, processing times, success rates)
+    - [ ] 10.4.3 Implement health check endpoints for monitoring
+    - [ ] 10.4.4 Add distributed tracing if needed
+  - [ ] 10.5 Documentation:
+    - [ ] 10.5.1 Write API documentation for all modules
+    - [ ] 10.5.2 Create agent documentation with examples
+    - [ ] 10.5.3 Update README with deployment instructions
+    - [ ] 10.5.4 Create architecture diagrams (workflow, data flow)
+    - [ ] 10.5.5 Document configuration options
+  - [ ] 10.6 Deployment Preparation:
+    - [ ] 10.6.1 Create `Dockerfile` for containerization
+    - [ ] 10.6.2 Create `docker-compose.yml` for local development with PostgreSQL
+    - [ ] 10.6.3 Create deployment scripts or CI/CD configuration
+    - [ ] 10.6.4 Set up production environment configuration
+    - [ ] 10.6.5 Implement database migration strategy
+    - [ ] 10.6.6 Create backup and recovery procedures
+    - [ ] 10.6.7 Implement security best practices (API key management, encryption, access controls)
+  - [ ] 10.7 Main Application Entry Point:
+    - [ ] 10.7.1 Create `bugbridge/main.py` as application entry point
+    - [ ] 10.7.2 Implement CLI interface for running workflows manually
+    - [ ] 10.7.3 Set up background scheduler for periodic tasks (feedback collection, monitoring, reporting)
+    - [ ] 10.7.4 Implement graceful shutdown handling
+
