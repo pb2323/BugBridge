@@ -45,6 +45,29 @@
 - `bugbridge/utils/retry.py` - Retry logic and exponential backoff utilities
 - `bugbridge/utils/validators.py` - Input validation utilities
 - `bugbridge/main.py` - Main application entry point
+- `bugbridge/api/__init__.py` - API package initialization
+- `bugbridge/api/main.py` - FastAPI application setup
+- `bugbridge/api/routes/__init__.py` - API routes package
+- `bugbridge/api/routes/feedback.py` - Feedback posts API endpoints
+- `bugbridge/api/routes/metrics.py` - Metrics and statistics API endpoints
+- `bugbridge/api/routes/config.py` - Configuration management API endpoints
+- `bugbridge/api/routes/auth.py` - Authentication API endpoints
+- `bugbridge/api/routes/reports.py` - Reports API endpoints
+- `bugbridge/api/middleware/__init__.py` - Middleware package
+- `bugbridge/api/middleware/auth.py` - Authentication middleware
+- `bugbridge/api/models/__init__.py` - API request/response models
+- `bugbridge/api/models/schemas.py` - Pydantic schemas for API
+- `dashboard/` - Frontend dashboard directory (React/Next.js)
+- `dashboard/src/` - Source code directory
+- `dashboard/src/components/` - React components
+- `dashboard/src/pages/` - Page components
+- `dashboard/src/hooks/` - Custom React hooks
+- `dashboard/src/services/` - API service functions
+- `dashboard/src/utils/` - Utility functions
+- `dashboard/src/styles/` - Styling files
+- `dashboard/public/` - Static assets
+- `dashboard/package.json` - Frontend dependencies
+- `dashboard/tsconfig.json` - TypeScript configuration
 - `tests/` - Test directory (to be created)
 - `tests/__init__.py` - Test package initialization
 - `tests/test_models.py` - Unit tests for Pydantic models
@@ -238,7 +261,127 @@ Update the file after completing each sub-task, not just after completing an ent
   - [ ] 9.7 Write unit tests for Reporting Agent (mocked database queries and LLM)
   - [ ] 9.8 Write integration tests for report generation with sample data
 
-- [ ] 10.0 Testing, Error Handling & Production Readiness
+- [ ] 10.0 Dashboard Development (Frontend & API)
+  - [ ] 10.1 Backend API Setup:
+    - [ ] 10.1.1 Set up FastAPI application structure (`bugbridge/api/`)
+    - [ ] 10.1.2 Create REST API endpoints for dashboard data:
+      - [ ] GET `/api/feedback` - List feedback posts with filtering, pagination, search
+      - [ ] GET `/api/feedback/{post_id}` - Get detailed feedback post information
+      - [ ] GET `/api/metrics` - Get aggregated metrics and statistics
+      - [ ] GET `/api/reports` - List historical reports
+      - [ ] GET `/api/reports/{report_id}` - Get specific report details
+      - [ ] GET `/api/config` - Get configuration settings
+      - [ ] PUT `/api/config` - Update configuration settings
+      - [ ] GET `/api/jira-tickets` - List Jira tickets with status information
+    - [ ] 10.1.3 Implement authentication endpoints:
+      - [ ] POST `/api/auth/login` - User login
+      - [ ] POST `/api/auth/logout` - User logout
+      - [ ] GET `/api/auth/me` - Get current user information
+    - [ ] 10.1.4 Implement JWT-based authentication middleware
+    - [ ] 10.1.5 Implement role-based access control (admin vs. viewer)
+    - [ ] 10.1.6 Add request validation using Pydantic models
+    - [ ] 10.1.7 Implement error handling and error responses
+    - [ ] 10.1.8 Add API documentation (OpenAPI/Swagger)
+    - [ ] 10.1.9 Write unit tests for API endpoints
+  - [ ] 10.2 Frontend Project Setup:
+    - [ ] 10.2.1 Set up React/Next.js project structure (`bugbridge-dashboard/` or `dashboard/`)
+    - [ ] 10.2.2 Configure TypeScript for type safety
+    - [ ] 10.2.3 Set up Tailwind CSS for styling
+    - [ ] 10.2.4 Configure build tools (Vite, Next.js, or Create React App)
+    - [ ] 10.2.5 Set up routing (React Router or Next.js routing)
+    - [ ] 10.2.6 Configure environment variables for API endpoints
+    - [ ] 10.2.7 Set up state management (React Context, Zustand, or Redux)
+    - [ ] 10.2.8 Install and configure data visualization library (Recharts or Chart.js)
+    - [ ] 10.2.9 Set up React Query for data fetching and caching
+  - [ ] 10.3 Dashboard Layout & Navigation:
+    - [ ] 10.3.1 Create main dashboard layout component
+    - [ ] 10.3.2 Implement navigation sidebar/menu
+    - [ ] 10.3.3 Create header with user info and logout
+    - [ ] 10.3.4 Implement responsive design (desktop and tablet)
+    - [ ] 10.3.5 Create loading states and skeleton screens
+    - [ ] 10.3.6 Implement error boundary components
+  - [ ] 10.4 Metrics Dashboard Views:
+    - [ ] 10.4.1 Create overview dashboard page with key metrics:
+      - [ ] Total feedback posts (today, week, month) cards
+      - [ ] Bugs vs. feature requests breakdown chart
+      - [ ] Sentiment distribution pie/bar chart
+      - [ ] Priority items requiring attention list
+      - [ ] Jira tickets created/resolved metrics
+      - [ ] Response times and resolution metrics
+      - [ ] Burning issues count and list
+    - [ ] 10.4.2 Implement interactive charts and graphs:
+      - [ ] Time series charts for trends
+      - [ ] Sentiment distribution visualization
+      - [ ] Priority score distribution chart
+      - [ ] Bug vs. feature request breakdown
+      - [ ] Jira ticket status tracking visualization
+    - [ ] 10.4.3 Add drill-down functionality (click charts to see details)
+    - [ ] 10.4.4 Implement auto-refresh mechanism (polling every 30 seconds or configurable)
+  - [ ] 10.5 Feedback Posts Management:
+    - [ ] 10.5.1 Create feedback posts listing page with table view
+    - [ ] 10.5.2 Implement filtering functionality:
+      - [ ] Date range picker
+      - [ ] Category/tags filter
+      - [ ] Sentiment filter
+      - [ ] Priority score filter
+      - [ ] Bug vs. feature request filter
+      - [ ] Status filter (collected, analyzed, ticket created, resolved, notified)
+    - [ ] 10.5.3 Implement search functionality (search by title, content, author)
+    - [ ] 10.5.4 Add pagination for large datasets
+    - [ ] 10.5.5 Create feedback post detail view:
+      - [ ] Display original post content and metadata
+      - [ ] Show analysis results (bug detection, sentiment, priority scores)
+      - [ ] Display linked Jira ticket information and status
+      - [ ] Show notification status
+      - [ ] Display workflow status timeline
+    - [ ] 10.5.6 Add sorting functionality (by date, priority, votes, etc.)
+  - [ ] 10.6 Configuration Management Interface:
+    - [ ] 10.6.1 Create configuration settings page
+    - [ ] 10.6.2 Implement Canny.io integration settings form:
+      - [ ] API key input (masked)
+      - [ ] Subdomain input
+      - [ ] Board ID selection
+      - [ ] Sync interval configuration
+    - [ ] 10.6.3 Implement Jira MCP server configuration form:
+      - [ ] Server URL input
+      - [ ] Project key selection
+      - [ ] Resolution statuses configuration
+    - [ ] 10.6.4 Implement XAI API settings form:
+      - [ ] API key input (masked)
+      - [ ] Model selection dropdown
+      - [ ] Temperature setting
+    - [ ] 10.6.5 Implement priority scoring weights configuration:
+      - [ ] Interactive sliders or inputs for weight adjustment
+      - [ ] Visual preview of weight distribution
+    - [ ] 10.6.6 Implement notification templates editor
+    - [ ] 10.6.7 Implement report schedule and recipient configuration
+    - [ ] 10.6.8 Add form validation and error messages
+    - [ ] 10.6.9 Implement save/cancel functionality
+    - [ ] 10.6.10 Show success/error feedback after configuration changes
+  - [ ] 10.7 Reports View:
+    - [ ] 10.7.1 Create reports listing page
+    - [ ] 10.7.2 Implement report viewing interface (formatted Markdown)
+    - [ ] 10.7.3 Add report filtering (by date, type)
+    - [ ] 10.7.4 Implement export functionality (CSV, PDF)
+    - [ ] 10.7.5 Add report generation trigger button (for manual generation)
+  - [ ] 10.8 Authentication & Authorization:
+    - [ ] 10.8.1 Create login page with form
+    - [ ] 10.8.2 Implement login flow (JWT token handling)
+    - [ ] 10.8.3 Store JWT token securely (httpOnly cookies or secure storage)
+    - [ ] 10.8.4 Implement logout functionality
+    - [ ] 10.8.5 Add protected routes (require authentication)
+    - [ ] 10.8.6 Implement role-based UI rendering (admin vs. viewer)
+    - [ ] 10.8.7 Add session management (token refresh, expiration handling)
+  - [ ] 10.9 Dashboard Integration & Testing:
+    - [ ] 10.9.1 Integrate dashboard with backend API
+    - [ ] 10.9.2 Test all dashboard features end-to-end
+    - [ ] 10.9.3 Test responsive design on different screen sizes
+    - [ ] 10.9.4 Test authentication and authorization flows
+    - [ ] 10.9.5 Write unit tests for React components
+    - [ ] 10.9.6 Write integration tests for API endpoints
+    - [ ] 10.9.7 Write E2E tests for critical dashboard flows (using Playwright or Cypress)
+
+- [ ] 11.0 Testing, Error Handling & Production Readiness
   - [ ] 10.1 Error Handling & Resilience:
     - [ ] 10.1.1 Implement comprehensive error handling for all API calls (Canny.io, XAI, Jira MCP) with retry logic
     - [ ] 10.1.2 Implement dead letter queue mechanism for failed processing

@@ -30,6 +30,7 @@ BugBridge is an AI-powered feedback management platform that automates the entir
 4. **Monitors** Jira ticket status and resolution
 5. **Notifies** customers when their issues are resolved
 6. **Reports** daily summaries and analytics
+7. **Visualizes** data through an intuitive and interactive web dashboard
 
 ### Goal
 
@@ -47,6 +48,7 @@ Build a fully automated, AI-driven feedback management platform that transforms 
 4. **Real-time Monitoring**: Monitor Jira ticket status and detect resolutions
 5. **Feedback Loop Closure**: Automatically notify customers when issues are resolved
 6. **Daily Reporting**: Generate comprehensive daily summary reports
+7. **Interactive Dashboard**: Provide intuitive and interactive web dashboard for real-time visibility and control
 
 ### Success Metrics
 
@@ -141,7 +143,37 @@ Build a fully automated, AI-driven feedback management platform that transforms 
 **Acceptance Criteria:**
 - Reports include: new issues reported, bugs vs. feature requests, sentiment trends, priority items, Jira tickets created/resolved
 - Reports are scheduled and delivered automatically
-- Reports are customizable and accessible via dashboard
+- Reports are accessible via dashboard
+
+### US-9: Product Manager - Interactive Dashboard
+**As a** Product Manager  
+**I want** to access an intuitive and interactive web dashboard  
+**So that** I can monitor feedback health, configure settings, and manage the platform in real-time
+
+**Acceptance Criteria:**
+- Dashboard displays real-time metrics and visualizations (charts, graphs)
+- Dashboard shows feedback overview, sentiment trends, priority items, Jira ticket status
+- Dashboard allows filtering and searching of feedback posts
+- Dashboard provides configuration management interface
+- Dashboard is responsive and works on desktop and tablet devices
+- Dashboard updates in real-time or near real-time
+- Dashboard provides interactive drill-down capabilities for detailed analysis
+
+### US-10: Admin - Configuration Management
+**As an** Administrator  
+**I want** to configure platform settings through the dashboard  
+**So that** I can manage integrations, agent settings, and reporting without code changes
+
+**Acceptance Criteria:**
+- Dashboard provides UI for configuring Canny.io integration (API keys, board IDs)
+- Dashboard allows Jira MCP server configuration
+- Dashboard enables XAI API settings configuration
+- Dashboard provides sync interval and schedule configuration
+- Dashboard allows priority scoring weights adjustment
+- Dashboard enables notification template customization
+- Dashboard supports report schedule and recipient configuration
+- Configuration changes are validated before saving
+- Configuration changes take effect without system restart (where possible)
 
 ---
 
@@ -333,7 +365,62 @@ Build a fully automated, AI-driven feedback management platform that transforms 
 
 **FR-12.4**: The system MUST validate configuration on startup  
 **FR-12.5**: The system MUST support multiple Canny.io boards and Jira projects  
-**FR-12.6**: The system MUST provide admin interface or API for configuration management
+**FR-12.6**: The system MUST provide admin interface through the dashboard AND API for configuration management
+
+### 4.13 Dashboard Module
+
+**FR-13.1**: The system MUST provide a web-based dashboard accessible via browser  
+**FR-13.2**: The dashboard MUST be responsive and work on desktop and tablet devices  
+**FR-13.3**: The dashboard MUST display real-time or near real-time metrics and visualizations  
+**FR-13.4**: The dashboard MUST show the following key metrics:
+- Total feedback posts (today, this week, this month)
+- Bugs vs. feature requests breakdown (counts and percentages)
+- Sentiment distribution (positive, neutral, negative, frustrated, angry)
+- Priority items requiring attention (top 10-20)
+- Jira tickets created and resolved (today, this week)
+- Response times (average time to ticket creation)
+- Resolution metrics (resolution rate, average resolution time)
+- Burning issues count and list
+
+**FR-13.5**: The dashboard MUST provide interactive visualizations:
+- Charts and graphs for trends over time
+- Sentiment distribution pie/bar charts
+- Priority score distribution
+- Bug vs. feature request breakdown
+- Jira ticket status tracking
+
+**FR-13.6**: The dashboard MUST allow filtering of feedback posts by:
+- Date range
+- Category/tags
+- Sentiment
+- Priority score
+- Bug vs. feature request
+- Status (collected, analyzed, ticket created, resolved, notified)
+
+**FR-13.7**: The dashboard MUST provide search functionality for feedback posts  
+**FR-13.8**: The dashboard MUST allow drill-down from summary metrics to detailed feedback post views  
+**FR-13.9**: The dashboard MUST display individual feedback post details including:
+- Original post content and metadata
+- Analysis results (bug detection, sentiment, priority scores)
+- Linked Jira ticket information and status
+- Notification status
+- Workflow status timeline
+
+**FR-13.10**: The dashboard MUST provide configuration management interface:
+- Canny.io integration settings (API key management, board selection)
+- Jira MCP server configuration
+- XAI API settings
+- Sync intervals and schedules
+- Priority scoring weights
+- Notification templates
+- Report schedules and recipients
+
+**FR-13.11**: The dashboard MUST validate configuration inputs before saving  
+**FR-13.12**: The dashboard MUST provide visual feedback for configuration changes (success/error messages)  
+**FR-13.13**: The dashboard MUST support authentication and authorization (admin vs. viewer roles)  
+**FR-13.14**: The dashboard MUST update data periodically (configurable refresh interval, default 30 seconds)  
+**FR-13.15**: The dashboard MUST handle errors gracefully with user-friendly error messages  
+**FR-13.16**: The dashboard MUST provide export functionality for reports and data (CSV, PDF)
 
 ---
 
@@ -343,14 +430,14 @@ Build a fully automated, AI-driven feedback management platform that transforms 
 
 1. **Multi-platform Feedback Sources**: This PRD focuses on Canny.io only. Integration with UserVoice, ProductBoard, or other platforms is out of scope for initial release
 2. **Multi-issue Tracker Support**: This PRD focuses on Jira only. Integration with Linear, GitHub Issues, or other trackers is out of scope
-3. **Real-time WebSocket Updates**: Initial implementation will use polling, not real-time WebSocket connections
-4. **Advanced Analytics Dashboard**: Initial release focuses on daily reports. Advanced dashboard with real-time visualization is out of scope
-5. **Multi-tenant Architecture**: Initial release assumes single organization deployment. Multi-tenant support is out of scope
-6. **Custom Agent Training**: Agents use pre-configured XAI models. Fine-tuning or custom model training is out of scope
-7. **User-facing Web Application**: Initial release is backend-focused. Customer-facing portal or admin UI is out of scope
-8. **Mobile Applications**: No mobile app development in scope
-9. **Advanced SLA Management**: Basic monitoring only. SLA tracking and enforcement is out of scope
-10. **Integration Marketplace**: Custom integrations beyond Canny.io and Jira are out of scope
+3. **Real-time WebSocket Updates**: Initial implementation will use polling with periodic refresh, not full WebSocket real-time updates
+4. **Multi-tenant Architecture**: Initial release assumes single organization deployment. Multi-tenant support is out of scope
+5. **Custom Agent Training**: Agents use pre-configured XAI models. Fine-tuning or custom model training is out of scope
+6. **Customer-facing Portal**: Customer-facing portal for end users is out of scope. Dashboard is for internal team use only
+7. **Mobile Applications**: Native mobile applications are out of scope. Dashboard should be responsive for tablet use
+8. **Advanced SLA Management**: Basic monitoring only. SLA tracking and enforcement is out of scope
+9. **Integration Marketplace**: Custom integrations beyond Canny.io and Jira are out of scope
+10. **Advanced AI Features**: Advanced ML model training, custom model deployment, or complex AI workflows beyond the defined agents are out of scope
 
 ---
 
@@ -368,7 +455,8 @@ The BugBridge platform will be built as a **LangGraph-based agent orchestration 
 - **XAI (xAI) API**: For all LLM operations (using Grok models)
 
 **Language & Runtime:**
-- **Python 3.10+**: Primary implementation language
+- **Python 3.10+**: Primary implementation language (backend)
+- **TypeScript/JavaScript**: Frontend dashboard implementation
 - **asyncio**: For asynchronous operations
 
 **Data Storage:**
@@ -378,6 +466,19 @@ The BugBridge platform will be built as a **LangGraph-based agent orchestration 
 **Integration:**
 - **MCP (Model Context Protocol)**: For Jira integration via existing mcp-atlassian server
 - **Canny.io REST API**: For feedback collection and notifications
+
+**Frontend (Dashboard):**
+- **React**: UI framework for interactive dashboard
+- **Next.js**: React framework with SSR and API routes (optional)
+- **Tailwind CSS**: Utility-first CSS framework for responsive design
+- **Chart.js / Recharts**: Interactive data visualization library
+- **React Query / TanStack Query**: Data fetching and caching for dashboard
+- **WebSocket / Server-Sent Events**: Real-time updates for dashboard
+
+**Backend API:**
+- **FastAPI**: Modern Python web framework for REST API
+- **WebSocket support**: For real-time dashboard updates (optional)
+- **JWT / OAuth2**: Authentication and authorization
 
 **Other:**
 - **pydantic**: For data validation and structured outputs
@@ -1082,22 +1183,74 @@ CREATE INDEX idx_workflow_states_status ON workflow_states(workflow_status);
 - Use message queue for workflow processing (optional, for high volume)
 - Database connection pooling
 
-### 7.9 Security Considerations
+### 7.9 Dashboard API & Frontend Considerations
+
+**REST API Design:**
+- Create FastAPI endpoints for dashboard data access
+- Implement RESTful API design patterns
+- Provide endpoints for:
+  - Feedback posts listing (with filtering, pagination, search)
+  - Metrics and statistics (real-time aggregations)
+  - Configuration management (CRUD operations)
+  - Report generation and retrieval
+  - Individual feedback post details
+  - Jira ticket information
+
+**API Authentication:**
+- Implement JWT-based authentication for dashboard API
+- Support role-based access control (admin vs. viewer)
+- Secure API endpoints with authentication middleware
+
+**Real-time Updates:**
+- Consider WebSocket or Server-Sent Events (SSE) for real-time dashboard updates
+- Alternative: Polling-based refresh at configurable intervals (default 30 seconds)
+- Efficient data fetching to minimize API load
+
+**Frontend Architecture:**
+- Component-based architecture using React
+- State management (React Context, Redux, or Zustand)
+- Responsive design using Tailwind CSS or similar
+- Mobile-first approach with tablet optimization
+
+**Data Visualization:**
+- Use Chart.js, Recharts, or similar for interactive charts
+- Support multiple chart types (line, bar, pie, area charts)
+- Enable drill-down capabilities for detailed analysis
+- Optimize for performance with large datasets
+
+**Performance Optimization:**
+- Implement client-side caching with React Query
+- Lazy loading for dashboard components
+- Virtual scrolling for large lists
+- Optimize API responses with efficient queries
+
+### 7.10 Security Considerations
 
 **API Key Management:**
 - Store API keys in environment variables, never in code
 - Use secure secret management (AWS Secrets Manager, etc.) in production
 - Rotate keys regularly
+- Never expose API keys in frontend code
 
 **Data Privacy:**
 - Handle customer feedback data securely
 - Comply with data protection regulations (GDPR, etc.)
 - Encrypt sensitive data at rest
+- Sanitize user inputs to prevent XSS attacks
 
 **Access Control:**
 - Authenticate all API calls
+- Implement role-based access control (RBAC) for dashboard
 - Validate inputs before processing
 - Sanitize outputs before sending to external systems
+- Use HTTPS for all API and dashboard communications
+
+**Dashboard Security:**
+- Implement secure authentication flow
+- Use HTTP-only cookies for session management
+- Implement CSRF protection
+- Validate and sanitize all dashboard inputs
+- Rate limiting for API endpoints
 
 ---
 
@@ -1199,13 +1352,25 @@ CREATE INDEX idx_workflow_states_status ON workflow_states(workflow_status);
 - Set up report delivery mechanisms
 - Test report accuracy
 
-### Phase 6: Polish & Production (Weeks 10-12)
+### Phase 6: Dashboard Development (Weeks 10-11)
+- Set up frontend project structure (React/Next.js)
+- Create REST API endpoints with FastAPI for dashboard
+- Implement authentication and authorization
+- Build dashboard UI components and layouts
+- Implement data visualization components (charts, graphs)
+- Create configuration management interface
+- Implement filtering, search, and drill-down functionality
+- Add real-time updates (polling or WebSocket)
+- Test dashboard responsiveness and user experience
+
+### Phase 7: Polish & Production (Weeks 12-14)
 - Error handling and resilience
-- Performance optimization
+- Performance optimization (backend and frontend)
 - Monitoring and observability
 - Documentation
-- Testing and QA
+- Testing and QA (including dashboard E2E tests)
 - Deployment preparation
+- Dashboard deployment and hosting
 
 ---
 
@@ -1218,7 +1383,7 @@ CREATE INDEX idx_workflow_states_status ON workflow_states(workflow_status);
 - **PostgreSQL**: Database server for persistent storage
 - **Python 3.10+**: Runtime environment
 
-### Python Package Dependencies
+### Python Package Dependencies (Backend)
 - `langgraph`: Agent workflow orchestration
 - `langchain`: LLM integration and tooling
 - `langchain-community`: Community tools (if XAI integration available)
@@ -1229,6 +1394,26 @@ CREATE INDEX idx_workflow_states_status ON workflow_states(workflow_status);
 - `asyncpg`: Async PostgreSQL driver
 - `apscheduler`: Task scheduling for reports
 - `xai-python`: XAI API client (if available)
+- `fastapi`: Web framework for REST API
+- `uvicorn`: ASGI server for FastAPI
+- `python-jose`: JWT token handling
+- `passlib`: Password hashing
+- `python-multipart`: Form data handling
+- `websockets`: WebSocket support (optional)
+
+### Frontend Dependencies (Dashboard)
+- `react`: UI framework
+- `react-dom`: React DOM bindings
+- `next.js`: React framework (optional, can use Vite or Create React App)
+- `typescript`: Type-safe JavaScript
+- `tailwindcss`: Utility-first CSS framework
+- `recharts` or `chart.js`: Data visualization library
+- `@tanstack/react-query`: Data fetching and caching
+- `axios`: HTTP client for API calls
+- `react-router-dom`: Routing (if not using Next.js)
+- `zustand` or `redux`: State management
+- `react-hook-form`: Form handling
+- `date-fns`: Date manipulation
 
 ### Internal Dependencies
 - Existing `mcp-atlassian` server in the repository must be operational

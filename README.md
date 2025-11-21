@@ -16,6 +16,7 @@ BugBridge transforms raw customer feedback into actionable development tasks usi
 4. **Monitors** Jira ticket status and resolution
 5. **Notifies** customers when their issues are resolved
 6. **Reports** daily summaries and analytics
+7. **Visualizes** data through an intuitive and interactive web dashboard
 
 ### Key Features
 
@@ -24,6 +25,7 @@ BugBridge transforms raw customer feedback into actionable development tasks usi
 - 📊 **Intelligent Prioritization**: Multi-factor priority scoring based on engagement, sentiment, and business impact
 - 🔗 **Seamless Integrations**: Native Canny.io and Jira integrations via MCP server
 - 📈 **Daily Reporting**: Comprehensive analytics and insights
+- 🎨 **Interactive Dashboard**: Intuitive web dashboard with real-time metrics, visualizations, and configuration management
 
 ---
 
@@ -44,6 +46,7 @@ BugBridge transforms raw customer feedback into actionable development tasks usi
 - 🔨 Project setup and foundation
 - 🔨 AI agent system architecture
 - 🔨 Feedback collection module
+- 🔨 Dashboard development (frontend & API)
 
 ---
 
@@ -57,7 +60,8 @@ BugBridge transforms raw customer feedback into actionable development tasks usi
 
 ### Language & Runtime
 
-- **Python 3.10+**: Primary implementation language
+- **Python 3.10+**: Backend implementation language
+- **TypeScript/JavaScript**: Frontend dashboard implementation
 - **asyncio**: For asynchronous operations
 
 ### Data Storage
@@ -69,6 +73,19 @@ BugBridge transforms raw customer feedback into actionable development tasks usi
 
 - **Canny.io REST API**: Feedback collection and notifications
 - **MCP (Model Context Protocol)**: Jira integration via existing mcp-atlassian server
+
+### Backend API
+
+- **FastAPI**: Modern Python web framework for REST API
+- **JWT / OAuth2**: Authentication and authorization
+
+### Frontend (Dashboard)
+
+- **React**: UI framework for interactive dashboard
+- **Next.js**: React framework with SSR and API routes (optional)
+- **Tailwind CSS**: Utility-first CSS framework for responsive design
+- **Chart.js / Recharts**: Interactive data visualization library
+- **React Query / TanStack Query**: Data fetching and caching
 
 ### Key Libraries
 
@@ -103,8 +120,18 @@ BugBridge/
 │   ├── workflows/                # LangGraph workflows
 │   │   ├── main.py              # Main feedback processing workflow
 │   │   └── reporting.py         # Daily report generation workflow
+│   ├── api/                      # REST API for dashboard
+│   │   ├── routes/              # API route handlers
+│   │   ├── middleware/          # Authentication and other middleware
+│   │   └── models/              # API request/response models
 │   ├── tools/                    # LangChain tools
 │   └── utils/                    # Utility functions
+├── dashboard/                    # Frontend dashboard (React/Next.js)
+│   ├── src/                      # Source code
+│   │   ├── components/          # React components
+│   │   ├── pages/               # Page components
+│   │   └── services/            # API service functions
+│   └── package.json             # Frontend dependencies
 ├── mcp-atlassian/                # MCP server for Jira/Confluence integration
 ├── tasks/                        # Project documentation
 │   ├── prd-bugbridge-platform.md    # Product Requirements Document
@@ -237,11 +264,19 @@ The platform implementation is organized into 6 phases (see [PRD](tasks/prd-bugb
    - Reporting Agent
    - Daily report generation
 
-6. **Phase 6: Production Readiness** (Weeks 10-12)
+6. **Phase 6: Dashboard Development** (Weeks 10-11)
+   - Backend REST API setup (FastAPI)
+   - Frontend dashboard development (React)
+   - Authentication and authorization
+   - Interactive visualizations and metrics
+   - Configuration management interface
+
+7. **Phase 7: Production Readiness** (Weeks 12-14)
    - Error handling and resilience
    - Performance optimization
-   - Testing and QA
+   - Testing and QA (including dashboard E2E tests)
    - Deployment preparation
+   - Dashboard deployment and hosting
 
 ---
 
@@ -341,7 +376,8 @@ MCP server configured in `mcp-atlassian/` directory.
 - [ ] Complete Phase 3: Jira Integration
 - [ ] Complete Phase 4: Monitoring & Notifications
 - [ ] Complete Phase 5: Reporting
-- [ ] Complete Phase 6: Production Readiness
+- [ ] Complete Phase 6: Dashboard Development
+- [ ] Complete Phase 7: Production Readiness
 - [ ] Beta testing with select customers
 - [ ] Public launch
 
