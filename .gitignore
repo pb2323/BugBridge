@@ -70,3 +70,7 @@ out/
 .cache/
 .temp/
 tmp/
+-e 
+# Environment files
+*.env
+*.env.*
