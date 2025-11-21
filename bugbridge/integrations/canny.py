@@ -96,15 +96,17 @@ class CannyAPIClient:
         
         logger.info(f"Fetching posts from board {board_id} (limit={limit}, skip={skip})")
         
-        result = await self._make_request(
-            "posts/list",
-            {
-                "boardID": board_id,
-                "limit": limit,
-                "skip": skip,
-                "sort": sort
-            }
-        )
+        # Build request data
+        request_data = {
+            "limit": limit,
+            "skip": skip
+        }
+        
+        # Only add boardID if provided (some APIs don't require it)
+        if board_id:
+            request_data["boardID"] = board_id
+        
+        result = await self._make_request("posts/list", request_data)
         
         return result.get("posts", [])
     
