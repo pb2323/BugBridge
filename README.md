@@ -228,9 +228,10 @@ JIRA_PROJECT_KEY=PROJ
 JIRA_RESOLUTION_STATUSES=Done,Resolved,Fixed
 
 # XAI Configuration
-XAI_API_KEY=your_xai_api_key
-XAI_MODEL=grok-beta
-XAI_TEMPERATURE=0.0
+XAI__API_KEY=your_xai_api_key
+XAI__MODEL=grok-4-fast-reasoning
+XAI__TEMPERATURE=0.0
+XAI__MAX_OUTPUT_TOKENS=2048
 
 # Database Configuration
 DATABASE_URL=postgresql://user:pass@localhost/bugbridge
@@ -320,6 +321,30 @@ pytest tests/test_agents.py
 # Run with coverage
 pytest --cov=bugbridge tests/
 ```
+
+### Testing with Real MCP Server
+
+To test the Jira Creation Agent with a real MCP server (not mocked):
+
+1. **Start the MCP server**:
+   ```bash
+   cd mcp-atlassian
+   python -m mcp_atlassian --transport streamable-http --port 9000 --path /mcp -vv
+   ```
+
+2. **Verify server is accessible**:
+   ```bash
+   python scripts/verify_mcp_server.py
+   ```
+
+3. **Run real MCP server tests**:
+   ```bash
+   REAL_MCP_SERVER=true pytest tests/test_jira_real_mcp_server.py -v
+   # Or use the provided script
+   ./scripts/test_real_mcp_server.sh
+   ```
+
+See [docs/testing-with-real-mcp-server.md](docs/testing-with-real-mcp-server.md) for detailed instructions.
 
 ### Code Style
 

@@ -154,276 +154,276 @@ Update the file after completing each sub-task, not just after completing an ent
   - [x] 4.12 Write integration tests for Feedback Collection Agent
 
 - [ ] 5.0 AI Agent System Architecture (LangGraph & LangChain Setup)
-  - [ ] 5.1 Create `bugbridge/integrations/xai.py` with XAI API wrapper/LLM class compatible with LangChain (if LangChain doesn't have native XAI support, create custom `ChatXAI` class)
-  - [ ] 5.2 Configure XAI LLM with API key, model selection (grok-beta or grok-2), and temperature=0 for determinism
-  - [ ] 5.3 Create `bugbridge/agents/base.py` with base agent class that provides common functionality (logging, error handling, state management)
-  - [ ] 5.4 Implement structured output helper using Pydantic models with XAI LLM
-  - [ ] 5.5 Create `bugbridge/workflows/main.py` and set up LangGraph `StateGraph` with `BugBridgeState` TypedDict
-  - [ ] 5.6 Define workflow nodes (placeholder functions for now): `collect_feedback`, `analyze_bug`, `analyze_sentiment`, `calculate_priority`, `create_jira_ticket`, `monitor_status`, `notify_customer`
-  - [ ] 5.7 Define workflow edges between nodes (sequential flow for main pipeline)
-  - [ ] 5.8 Implement conditional edges logic (e.g., should_create_ticket based on priority score)
-  - [ ] 5.9 Create workflow compilation and execution infrastructure
-  - [ ] 5.10 Implement workflow state persistence to database (save/load workflow state)
-  - [ ] 5.11 Write unit tests for XAI integration and base agent functionality
+  - [x] 5.1 Create `bugbridge/integrations/xai.py` with XAI API wrapper/LLM class compatible with LangChain (if LangChain doesn't have native XAI support, create custom `ChatXAI` class)
+  - [x] 5.2 Configure XAI LLM with API key, model selection (grok-beta or grok-2), and temperature=0 for determinism
+  - [x] 5.3 Create `bugbridge/agents/base.py` with base agent class that provides common functionality (logging, error handling, state management)
+  - [x] 5.4 Implement structured output helper using Pydantic models with XAI LLM
+  - [x] 5.5 Create `bugbridge/workflows/main.py` and set up LangGraph `StateGraph` with `BugBridgeState` TypedDict
+  - [x] 5.6 Define workflow nodes (placeholder functions for now): `collect_feedback`, `analyze_bug`, `analyze_sentiment`, `calculate_priority`, `create_jira_ticket`, `monitor_status`, `notify_customer`
+  - [x] 5.7 Define workflow edges between nodes (sequential flow for main pipeline)
+  - [x] 5.8 Implement conditional edges logic (e.g., should_create_ticket based on priority score)
+  - [x] 5.9 Create workflow compilation and execution infrastructure
+  - [x] 5.10 Implement workflow state persistence to database (save/load workflow state)
+  - [x] 5.11 Write unit tests for XAI integration and base agent functionality
 
 - [ ] 6.0 Analysis Agents Implementation (Bug Detection, Sentiment, Priority)
-  - [ ] 6.1 Implement `bugbridge/agents/bug_detection.py` - Bug Detection Agent:
-    - [ ] 6.1.1 Create prompt template following PRD specifications (Section 6.4.2)
-    - [ ] 6.1.2 Implement structured output parsing using `BugDetectionResult` Pydantic model
-    - [ ] 6.1.3 Integrate with XAI LLM using structured outputs
-    - [ ] 6.1.4 Implement LangGraph node function that updates state with bug detection results
-    - [ ] 6.1.5 Add deterministic behavior (temperature=0, structured outputs)
-  - [ ] 6.2 Implement `bugbridge/agents/sentiment.py` - Sentiment Analysis Agent:
-    - [ ] 6.2.1 Create prompt template following PRD specifications (Section 6.4.3)
-    - [ ] 6.2.2 Implement structured output parsing using `SentimentAnalysisResult` Pydantic model
-    - [ ] 6.2.3 Integrate with XAI LLM using structured outputs
-    - [ ] 6.2.4 Implement LangGraph node function that updates state with sentiment analysis
-    - [ ] 6.2.5 Add deterministic behavior
-  - [ ] 6.3 Implement `bugbridge/agents/priority.py` - Priority Scoring Agent:
-    - [ ] 6.3.1 Create prompt template following PRD specifications (Section 6.4.4)
-    - [ ] 6.3.2 Implement engagement score calculation from post data (votes, comments)
-    - [ ] 6.3.3 Create `CalculateEngagementTool` LangChain tool
-    - [ ] 6.3.4 Implement structured output parsing using `PriorityScoreResult` Pydantic model
-    - [ ] 6.3.5 Integrate with XAI LLM using structured outputs
-    - [ ] 6.3.6 Implement LangGraph node function that updates state with priority score
-    - [ ] 6.3.7 Add configurable priority weights support
-    - [ ] 6.3.8 Add burning issue detection logic
-  - [ ] 6.4 Wire up analysis agents in LangGraph workflow (`bugbridge/workflows/main.py`)
-  - [ ] 6.5 Write comprehensive unit tests for each analysis agent with mock LLM responses
-  - [ ] 6.6 Test deterministic behavior (same input produces same output)
-  - [ ] 6.7 Write integration tests for analysis pipeline (Feedback → Bug Detection → Sentiment → Priority)
+  - [x] 6.1 Implement `bugbridge/agents/bug_detection.py` - Bug Detection Agent:
+    - [x] 6.1.1 Create prompt template following PRD specifications (Section 6.4.2)
+    - [x] 6.1.2 Implement structured output parsing using `BugDetectionResult` Pydantic model
+    - [x] 6.1.3 Integrate with XAI LLM using structured outputs
+    - [x] 6.1.4 Implement LangGraph node function that updates state with bug detection results
+    - [x] 6.1.5 Add deterministic behavior (temperature=0, structured outputs)
+  - [x] 6.2 Implement `bugbridge/agents/sentiment.py` - Sentiment Analysis Agent:
+    - [x] 6.2.1 Create prompt template following PRD specifications (Section 6.4.3)
+    - [x] 6.2.2 Implement structured output parsing using `SentimentAnalysisResult` Pydantic model
+    - [x] 6.2.3 Integrate with XAI LLM using structured outputs
+    - [x] 6.2.4 Implement LangGraph node function that updates state with sentiment analysis
+    - [x] 6.2.5 Add deterministic behavior
+  - [x] 6.3 Implement `bugbridge/agents/priority.py` - Priority Scoring Agent:
+    - [x] 6.3.1 Create prompt template following PRD specifications (Section 6.4.4)
+    - [x] 6.3.2 Implement engagement score calculation from post data (votes, comments)
+    - [x] 6.3.3 Create `CalculateEngagementTool` LangChain tool
+    - [x] 6.3.4 Implement structured output parsing using `PriorityScoreResult` Pydantic model
+    - [x] 6.3.5 Integrate with XAI LLM using structured outputs
+    - [x] 6.3.6 Implement LangGraph node function that updates state with priority score
+    - [x] 6.3.7 Add configurable priority weights support
+    - [x] 6.3.8 Add burning issue detection logic
+  - [x] 6.4 Wire up analysis agents in LangGraph workflow (`bugbridge/workflows/main.py`)
+  - [x] 6.5 Write comprehensive unit tests for each analysis agent with mock LLM responses
+  - [x] 6.6 Test deterministic behavior (same input produces same output)
+  - [x] 6.7 Write integration tests for analysis pipeline (Feedback → Bug Detection → Sentiment → Priority)
 
 - [ ] 7.0 Jira Integration Module (MCP Client & Ticket Creation)
-  - [ ] 7.1 Study existing `mcp-atlassian` server structure and MCP protocol
-  - [ ] 7.2 Create `bugbridge/integrations/mcp_jira.py` with MCP client wrapper for Jira operations
-  - [ ] 7.3 Implement MCP connection handling (HTTP or WebSocket based on server configuration)
-  - [ ] 7.4 Create `bugbridge/tools/jira_tools.py` with LangChain tools for MCP Jira operations:
-    - [ ] 7.4.1 `CreateIssueTool` - wraps MCP create_issue function
-    - [ ] 7.4.2 `GetIssueTool` - wraps MCP get_issue function
-    - [ ] 7.4.3 `UpdateIssueTool` - wraps MCP update_issue function
-    - [ ] 7.4.4 `SearchIssuesTool` - wraps MCP search function (for monitoring)
-  - [ ] 7.5 Implement `bugbridge/agents/jira_creation.py` - Jira Creation Agent:
-    - [ ] 7.5.1 Gather analysis results from workflow state (bug detection, sentiment, priority)
-    - [ ] 7.5.2 Format Jira ticket description using template (include feedback content, user details, sentiment score, priority reasoning)
-    - [ ] 7.5.3 Map priority score to Jira priority level (Critical, High, Medium, Low)
-    - [ ] 7.5.4 Determine issue type (Bug vs. Story/Task) based on bug detection result
-    - [ ] 7.5.5 Generate labels based on analysis (sentiment, category, etc.)
-    - [ ] 7.5.6 Call MCP Jira tool to create ticket
-    - [ ] 7.5.7 Store Jira ticket ID and link back to Canny.io post in database
-    - [ ] 7.5.8 Update workflow state with Jira ticket information
-  - [ ] 7.6 Implement error handling for Jira API failures with retry logic
-  - [ ] 7.7 Implement ticket assignment logic (round-robin or based on component)
-  - [ ] 7.8 Wire up Jira Creation Agent in LangGraph workflow
-  - [ ] 7.9 Write unit tests for MCP client wrapper and Jira tools
-  - [ ] 7.10 Write integration tests for Jira Creation Agent (end-to-end: Feedback → Analysis → Jira Ticket)
-  - [ ] 7.11 Test with real MCP server (or mocked MCP responses)
+  - [x] 7.1 Study existing `mcp-atlassian` server structure and MCP protocol
+  - [x] 7.2 Create `bugbridge/integrations/mcp_jira.py` with MCP client wrapper for Jira operations
+  - [x] 7.3 Implement MCP connection handling (HTTP or WebSocket based on server configuration)
+  - [x] 7.4 Create `bugbridge/tools/jira_tools.py` with LangChain tools for MCP Jira operations:
+    - [x] 7.4.1 `CreateIssueTool` - wraps MCP create_issue function
+    - [x] 7.4.2 `GetIssueTool` - wraps MCP get_issue function
+    - [x] 7.4.3 `UpdateIssueTool` - wraps MCP update_issue function
+    - [x] 7.4.4 `SearchIssuesTool` - wraps MCP search function (for monitoring)
+  - [x] 7.5 Implement `bugbridge/agents/jira_creation.py` - Jira Creation Agent:
+    - [x] 7.5.1 Gather analysis results from workflow state (bug detection, sentiment, priority)
+    - [x] 7.5.2 Format Jira ticket description using template (include feedback content, user details, sentiment score, priority reasoning)
+    - [x] 7.5.3 Map priority score to Jira priority level (Critical, High, Medium, Low)
+    - [x] 7.5.4 Determine issue type (Bug vs. Story/Task) based on bug detection result
+    - [x] 7.5.5 Generate labels based on analysis (sentiment, category, etc.)
+    - [x] 7.5.6 Call MCP Jira tool to create ticket
+    - [x] 7.5.7 Store Jira ticket ID and link back to Canny.io post in database
+    - [x] 7.5.8 Update workflow state with Jira ticket information
+  - [x] 7.6 Implement error handling for Jira API failures with retry logic
+  - [x] 7.7 Implement ticket assignment logic (round-robin or based on component)
+  - [x] 7.8 Wire up Jira Creation Agent in LangGraph workflow
+  - [x] 7.9 Write unit tests for MCP client wrapper and Jira tools
+  - [x] 7.10 Write integration tests for Jira Creation Agent (end-to-end: Feedback → Analysis → Jira Ticket)
+  - [x] 7.11 Test with real MCP server (or mocked MCP responses)
 
 - [ ] 8.0 Monitoring & Notification Agents
-  - [ ] 8.1 Implement `bugbridge/agents/monitoring.py` - Monitoring Agent:
-    - [ ] 8.1.1 Create polling mechanism to check Jira ticket status at configured intervals
-    - [ ] 8.1.2 Implement status comparison logic (compare current status with previous)
-    - [ ] 8.1.3 Detect resolution statuses (Done, Resolved, Fixed, etc.) from configuration
-    - [ ] 8.1.4 Implement status change history tracking
-    - [ ] 8.1.5 Trigger notification workflow when resolution is detected
-    - [ ] 8.1.6 Implement LangGraph node for status monitoring
+  - [x] 8.1 Implement `bugbridge/agents/monitoring.py` - Monitoring Agent:
+    - [x] 8.1.1 Create polling mechanism to check Jira ticket status at configured intervals
+    - [x] 8.1.2 Implement status comparison logic (compare current status with previous)
+    - [x] 8.1.3 Detect resolution statuses (Done, Resolved, Fixed, etc.) from configuration
+    - [x] 8.1.4 Implement status change history tracking
+    - [x] 8.1.5 Trigger notification workflow when resolution is detected
+    - [x] 8.1.6 Implement LangGraph node for status monitoring
     - [ ] 8.1.7 Add support for webhook-based real-time updates (if available)
-  - [ ] 8.2 Implement `bugbridge/agents/notification.py` - Notification Agent:
-    - [ ] 8.2.1 Create prompt template for generating customer replies (following PRD Section 6.4.7)
-    - [ ] 8.2.2 Implement reply generation using XAI LLM with structured/template-based output
-    - [ ] 8.2.3 Format reply message (include resolution confirmation, Jira ticket link, thank you)
-    - [ ] 8.2.4 Handle different resolution scenarios (fixed, won't fix, duplicate, etc.)
-    - [ ] 8.2.5 Use Canny.io API to post comment to original feedback post
-    - [ ] 8.2.6 Prevent duplicate notifications (check database for existing notifications)
-    - [ ] 8.2.7 Track notification status and delivery
-    - [ ] 8.2.8 Update workflow state to mark as "notified"
-  - [ ] 8.3 Wire up Monitoring and Notification agents in LangGraph workflow
-  - [ ] 8.4 Implement workflow loop for monitoring (poll until resolved, then notify)
+  - [x] 8.2 Implement `bugbridge/agents/notification.py` - Notification Agent:
+    - [x] 8.2.1 Create prompt template for generating customer replies (following PRD Section 6.4.7)
+    - [x] 8.2.2 Implement reply generation using XAI LLM with structured/template-based output
+    - [x] 8.2.3 Format reply message (include resolution confirmation, Jira ticket link, thank you)
+    - [x] 8.2.4 Handle different resolution scenarios (fixed, won't fix, duplicate, etc.)
+    - [x] 8.2.5 Use Canny.io API to post comment to original feedback post
+    - [x] 8.2.6 Prevent duplicate notifications (check database for existing notifications)
+    - [x] 8.2.7 Track notification status and delivery
+    - [x] 8.2.8 Update workflow state to mark as "notified"
+  - [x] 8.3 Wire up Monitoring and Notification agents in LangGraph workflow
+  - [x] 8.4 Implement workflow loop for monitoring (poll until resolved, then notify)
   - [ ] 8.5 Write unit tests for Monitoring Agent (mocked Jira status responses)
   - [ ] 8.6 Write unit tests for Notification Agent (mocked LLM and Canny.io responses)
   - [ ] 8.7 Write integration tests for full feedback loop (Collection → Analysis → Ticket → Resolution → Notification)
 
 - [ ] 9.0 Reporting Agent & Daily Summaries
-  - [ ] 9.1 Implement `bugbridge/agents/reporting.py` - Reporting Agent:
-    - [ ] 9.1.1 Create database query functions to aggregate daily metrics (new issues, bugs vs. features, sentiment trends, priority items, Jira tickets created/resolved, response times, resolution metrics)
-    - [ ] 9.1.2 Implement data aggregation logic (counts, percentages, averages, trends)
-    - [ ] 9.1.3 Create prompt template for natural language report summary generation using XAI LLM
-    - [ ] 9.1.4 Implement report formatting in Markdown with sections (following PRD requirements)
-    - [ ] 9.1.5 Generate report content: new issues, bugs vs. feature requests, sentiment trends, top priority items, ticket metrics, response times, resolution rates
-    - [ ] 9.1.6 Store generated reports in database for historical tracking
-  - [ ] 9.2 Create `bugbridge/workflows/reporting.py` - LangGraph workflow for daily report generation
-  - [ ] 9.3 Implement report scheduling using `apscheduler` (daily at configured time)
-  - [ ] 9.4 Implement report delivery mechanisms:
-    - [ ] 9.4.1 Email delivery (using SMTP or email service)
-    - [ ] 9.4.2 Slack integration (optional, for future)
-    - [ ] 9.4.3 File storage (save reports to filesystem or cloud storage)
-  - [ ] 9.5 Implement custom report filters (date range, category, etc.)
-  - [ ] 9.6 Create report generation command/endpoint for manual trigger
-  - [ ] 9.7 Write unit tests for Reporting Agent (mocked database queries and LLM)
+  - [x] 9.1 Implement `bugbridge/agents/reporting.py` - Reporting Agent:
+    - [x] 9.1.1 Create database query functions to aggregate daily metrics (new issues, bugs vs. features, sentiment trends, priority items, Jira tickets created/resolved, response times, resolution metrics)
+    - [x] 9.1.2 Implement data aggregation logic (counts, percentages, averages, trends)
+    - [x] 9.1.3 Create prompt template for natural language report summary generation using XAI LLM
+    - [x] 9.1.4 Implement report formatting in Markdown with sections (following PRD requirements)
+    - [x] 9.1.5 Generate report content: new issues, bugs vs. feature requests, sentiment trends, top priority items, ticket metrics, response times, resolution rates
+    - [x] 9.1.6 Store generated reports in database for historical tracking
+  - [x] 9.2 Create `bugbridge/workflows/reporting.py` - LangGraph workflow for daily report generation
+  - [x] 9.3 Implement report scheduling using `apscheduler` (daily at configured time)
+  - [x] 9.4 Implement report delivery mechanisms:
+    - [x] 9.4.1 Email delivery (using SMTP or email service)
+    - [x] 9.4.2 Slack integration (optional, for future)
+    - [x] 9.4.3 File storage (save reports to filesystem or cloud storage)
+  - [x] 9.5 Implement custom report filters (date range, category, etc.)
+  - [x] 9.6 Create report generation command/endpoint for manual trigger
+  - [x] 9.7 Write unit tests for Reporting Agent (mocked database queries and LLM)
   - [ ] 9.8 Write integration tests for report generation with sample data
 
 - [ ] 10.0 Dashboard Development (Frontend & API)
   - [ ] 10.1 Backend API Setup:
-    - [ ] 10.1.1 Set up FastAPI application structure (`bugbridge/api/`)
-    - [ ] 10.1.2 Create REST API endpoints for dashboard data:
-      - [ ] GET `/api/feedback` - List feedback posts with filtering, pagination, search
-      - [ ] GET `/api/feedback/{post_id}` - Get detailed feedback post information
-      - [ ] GET `/api/metrics` - Get aggregated metrics and statistics
-      - [ ] GET `/api/reports` - List historical reports
-      - [ ] GET `/api/reports/{report_id}` - Get specific report details
-      - [ ] GET `/api/config` - Get configuration settings
-      - [ ] PUT `/api/config` - Update configuration settings
-      - [ ] GET `/api/jira-tickets` - List Jira tickets with status information
-    - [ ] 10.1.3 Implement authentication endpoints:
-      - [ ] POST `/api/auth/login` - User login
-      - [ ] POST `/api/auth/logout` - User logout
-      - [ ] GET `/api/auth/me` - Get current user information
-    - [ ] 10.1.4 Implement JWT-based authentication middleware
-    - [ ] 10.1.5 Implement role-based access control (admin vs. viewer)
-    - [ ] 10.1.6 Add request validation using Pydantic models
-    - [ ] 10.1.7 Implement error handling and error responses
+    - [x] 10.1.1 Set up FastAPI application structure (`bugbridge/api/`)
+    - [x] 10.1.2 Create REST API endpoints for dashboard data:
+      - [x] GET `/api/feedback` - List feedback posts with filtering, pagination, search
+      - [x] GET `/api/feedback/{post_id}` - Get detailed feedback post information
+      - [x] GET `/api/metrics` - Get aggregated metrics and statistics
+      - [x] GET `/api/reports` - List historical reports
+      - [x] GET `/api/reports/{report_id}` - Get specific report details
+      - [x] GET `/api/config` - Get configuration settings
+      - [x] PUT `/api/config` - Update configuration settings
+      - [x] GET `/api/jira-tickets` - List Jira tickets with status information
+    - [x] 10.1.3 Implement authentication endpoints:
+      - [x] POST `/api/auth/login` - User login
+      - [x] POST `/api/auth/logout` - User logout
+      - [x] GET `/api/auth/me` - Get current user information
+    - [x] 10.1.4 Implement JWT-based authentication middleware
+    - [x] 10.1.5 Implement role-based access control (admin vs. viewer)
+    - [x] 10.1.6 Add request validation using Pydantic models
+    - [x] 10.1.7 Implement error handling and error responses
     - [ ] 10.1.8 Add API documentation (OpenAPI/Swagger)
     - [ ] 10.1.9 Write unit tests for API endpoints
-  - [ ] 10.2 Frontend Project Setup:
-    - [ ] 10.2.1 Set up React/Next.js project structure (`bugbridge-dashboard/` or `dashboard/`)
-    - [ ] 10.2.2 Configure TypeScript for type safety
-    - [ ] 10.2.3 Set up Tailwind CSS for styling
-    - [ ] 10.2.4 Configure build tools (Vite, Next.js, or Create React App)
-    - [ ] 10.2.5 Set up routing (React Router or Next.js routing)
-    - [ ] 10.2.6 Configure environment variables for API endpoints
-    - [ ] 10.2.7 Set up state management (React Context, Zustand, or Redux)
-    - [ ] 10.2.8 Install and configure data visualization library (Recharts or Chart.js)
-    - [ ] 10.2.9 Set up React Query for data fetching and caching
-  - [ ] 10.3 Dashboard Layout & Navigation:
-    - [ ] 10.3.1 Create main dashboard layout component
-    - [ ] 10.3.2 Implement navigation sidebar/menu
-    - [ ] 10.3.3 Create header with user info and logout
-    - [ ] 10.3.4 Implement responsive design (desktop and tablet)
-    - [ ] 10.3.5 Create loading states and skeleton screens
-    - [ ] 10.3.6 Implement error boundary components
-  - [ ] 10.4 Metrics Dashboard Views:
-    - [ ] 10.4.1 Create overview dashboard page with key metrics:
-      - [ ] Total feedback posts (today, week, month) cards
-      - [ ] Bugs vs. feature requests breakdown chart
-      - [ ] Sentiment distribution pie/bar chart
-      - [ ] Priority items requiring attention list
-      - [ ] Jira tickets created/resolved metrics
-      - [ ] Response times and resolution metrics
-      - [ ] Burning issues count and list
-    - [ ] 10.4.2 Implement interactive charts and graphs:
-      - [ ] Time series charts for trends
-      - [ ] Sentiment distribution visualization
-      - [ ] Priority score distribution chart
-      - [ ] Bug vs. feature request breakdown
-      - [ ] Jira ticket status tracking visualization
-    - [ ] 10.4.3 Add drill-down functionality (click charts to see details)
-    - [ ] 10.4.4 Implement auto-refresh mechanism (polling every 30 seconds or configurable)
-  - [ ] 10.5 Feedback Posts Management:
-    - [ ] 10.5.1 Create feedback posts listing page with table view
-    - [ ] 10.5.2 Implement filtering functionality:
-      - [ ] Date range picker
-      - [ ] Category/tags filter
-      - [ ] Sentiment filter
-      - [ ] Priority score filter
-      - [ ] Bug vs. feature request filter
-      - [ ] Status filter (collected, analyzed, ticket created, resolved, notified)
-    - [ ] 10.5.3 Implement search functionality (search by title, content, author)
-    - [ ] 10.5.4 Add pagination for large datasets
-    - [ ] 10.5.5 Create feedback post detail view:
-      - [ ] Display original post content and metadata
-      - [ ] Show analysis results (bug detection, sentiment, priority scores)
-      - [ ] Display linked Jira ticket information and status
-      - [ ] Show notification status
-      - [ ] Display workflow status timeline
-    - [ ] 10.5.6 Add sorting functionality (by date, priority, votes, etc.)
-  - [ ] 10.6 Configuration Management Interface:
-    - [ ] 10.6.1 Create configuration settings page
-    - [ ] 10.6.2 Implement Canny.io integration settings form:
-      - [ ] API key input (masked)
-      - [ ] Subdomain input
-      - [ ] Board ID selection
-      - [ ] Sync interval configuration
-    - [ ] 10.6.3 Implement Jira MCP server configuration form:
-      - [ ] Server URL input
-      - [ ] Project key selection
-      - [ ] Resolution statuses configuration
-    - [ ] 10.6.4 Implement XAI API settings form:
-      - [ ] API key input (masked)
-      - [ ] Model selection dropdown
-      - [ ] Temperature setting
-    - [ ] 10.6.5 Implement priority scoring weights configuration:
-      - [ ] Interactive sliders or inputs for weight adjustment
-      - [ ] Visual preview of weight distribution
+  - [x] 10.2 Frontend Project Setup:
+    - [x] 10.2.1 Set up React/Next.js project structure (`bugbridge-dashboard/` or `dashboard/`)
+    - [x] 10.2.2 Configure TypeScript for type safety
+    - [x] 10.2.3 Set up Tailwind CSS for styling
+    - [x] 10.2.4 Configure build tools (Vite, Next.js, or Create React App)
+    - [x] 10.2.5 Set up routing (React Router or Next.js routing)
+    - [x] 10.2.6 Configure environment variables for API endpoints
+    - [x] 10.2.7 Set up state management (React Context, Zustand, or Redux)
+    - [x] 10.2.8 Install and configure data visualization library (Recharts or Chart.js)
+    - [x] 10.2.9 Set up React Query for data fetching and caching
+  - [x] 10.3 Dashboard Layout & Navigation:
+    - [x] 10.3.1 Create main dashboard layout component
+    - [x] 10.3.2 Implement navigation sidebar/menu
+    - [x] 10.3.3 Create header with user info and logout
+    - [x] 10.3.4 Implement responsive design (desktop and tablet)
+    - [x] 10.3.5 Create loading states and skeleton screens
+    - [x] 10.3.6 Implement error boundary components
+  - [x] 10.4 Metrics Dashboard Views:
+    - [x] 10.4.1 Create overview dashboard page with key metrics:
+      - [x] Total feedback posts (today, week, month) cards
+      - [x] Bugs vs. feature requests breakdown chart
+      - [x] Sentiment distribution pie/bar chart
+      - [x] Priority items requiring attention list
+      - [x] Jira tickets created/resolved metrics
+      - [x] Response times and resolution metrics
+      - [x] Burning issues count and list
+    - [x] 10.4.2 Implement interactive charts and graphs:
+      - [x] Time series charts for trends
+      - [x] Sentiment distribution visualization
+      - [x] Priority score distribution chart
+      - [x] Bug vs. feature request breakdown
+      - [x] Jira ticket status tracking visualization
+    - [x] 10.4.3 Add drill-down functionality (click charts to see details)
+    - [x] 10.4.4 Implement auto-refresh mechanism (polling every 30 seconds or configurable)
+  - [x] 10.5 Feedback Posts Management:
+    - [x] 10.5.1 Create feedback posts listing page with table view
+    - [x] 10.5.2 Implement filtering functionality:
+      - [x] Date range picker
+      - [x] Category/tags filter
+      - [x] Sentiment filter
+      - [x] Priority score filter
+      - [x] Bug vs. feature request filter
+      - [x] Status filter (collected, analyzed, ticket created, resolved, notified)
+    - [x] 10.5.3 Implement search functionality (search by title, content, author)
+    - [x] 10.5.4 Add pagination for large datasets
+    - [x] 10.5.5 Create feedback post detail view:
+      - [x] Display original post content and metadata
+      - [x] Show analysis results (bug detection, sentiment, priority scores)
+      - [x] Display linked Jira ticket information and status
+      - [x] Show notification status
+      - [x] Display workflow status timeline
+    - [x] 10.5.6 Add sorting functionality (by date, priority, votes, etc.)
+  - [x] 10.6 Configuration Management Interface:
+    - [x] 10.6.1 Create configuration settings page
+    - [x] 10.6.2 Implement Canny.io integration settings form:
+      - [x] API key input (masked)
+      - [x] Subdomain input
+      - [x] Board ID selection
+      - [x] Sync interval configuration
+    - [x] 10.6.3 Implement Jira MCP server configuration form:
+      - [x] Server URL input
+      - [x] Project key selection
+      - [x] Resolution statuses configuration
+    - [x] 10.6.4 Implement XAI API settings form:
+      - [x] API key input (masked)
+      - [x] Model selection dropdown
+      - [x] Temperature setting
+    - [x] 10.6.5 Implement priority scoring weights configuration:
+      - [x] Interactive sliders or inputs for weight adjustment
+      - [x] Visual preview of weight distribution
     - [ ] 10.6.6 Implement notification templates editor
-    - [ ] 10.6.7 Implement report schedule and recipient configuration
-    - [ ] 10.6.8 Add form validation and error messages
-    - [ ] 10.6.9 Implement save/cancel functionality
-    - [ ] 10.6.10 Show success/error feedback after configuration changes
-  - [ ] 10.7 Reports View:
-    - [ ] 10.7.1 Create reports listing page
-    - [ ] 10.7.2 Implement report viewing interface (formatted Markdown)
-    - [ ] 10.7.3 Add report filtering (by date, type)
-    - [ ] 10.7.4 Implement export functionality (CSV, PDF)
-    - [ ] 10.7.5 Add report generation trigger button (for manual generation)
-  - [ ] 10.8 Authentication & Authorization:
-    - [ ] 10.8.1 Create login page with form
-    - [ ] 10.8.2 Implement login flow (JWT token handling)
-    - [ ] 10.8.3 Store JWT token securely (httpOnly cookies or secure storage)
-    - [ ] 10.8.4 Implement logout functionality
-    - [ ] 10.8.5 Add protected routes (require authentication)
-    - [ ] 10.8.6 Implement role-based UI rendering (admin vs. viewer)
-    - [ ] 10.8.7 Add session management (token refresh, expiration handling)
-  - [ ] 10.9 Dashboard Integration & Testing:
-    - [ ] 10.9.1 Integrate dashboard with backend API
-    - [ ] 10.9.2 Test all dashboard features end-to-end
-    - [ ] 10.9.3 Test responsive design on different screen sizes
-    - [ ] 10.9.4 Test authentication and authorization flows
-    - [ ] 10.9.5 Write unit tests for React components
-    - [ ] 10.9.6 Write integration tests for API endpoints
-    - [ ] 10.9.7 Write E2E tests for critical dashboard flows (using Playwright or Cypress)
+    - [x] 10.6.7 Implement report schedule and recipient configuration
+    - [x] 10.6.8 Add form validation and error messages
+    - [x] 10.6.9 Implement save/cancel functionality
+    - [x] 10.6.10 Show success/error feedback after configuration changes
+  - [x] 10.7 Reports View:
+    - [x] 10.7.1 Create reports listing page
+    - [x] 10.7.2 Implement report viewing interface (formatted Markdown)
+    - [x] 10.7.3 Add report filtering (by date, type)
+    - [x] 10.7.4 Implement export functionality (CSV, PDF)
+    - [x] 10.7.5 Add report generation trigger button (for manual generation)
+  - [x] 10.8 Authentication & Authorization:
+    - [x] 10.8.1 Create login page with form
+    - [x] 10.8.2 Implement login flow (JWT token handling)
+    - [x] 10.8.3 Store JWT token securely (httpOnly cookies or secure storage)
+    - [x] 10.8.4 Implement logout functionality
+    - [x] 10.8.5 Add protected routes (require authentication)
+    - [x] 10.8.6 Implement role-based UI rendering (admin vs. viewer)
+    - [x] 10.8.7 Add session management (token refresh, expiration handling)
+  - [x] 10.9 Dashboard Integration & Testing:
+    - [x] 10.9.1 Integrate dashboard with backend API
+    - [x] 10.9.2 Test all dashboard features end-to-end
+    - [x] 10.9.3 Test responsive design on different screen sizes
+    - [x] 10.9.4 Test authentication and authorization flows
+    - [x] 10.9.5 Write unit tests for React components
+    - [x] 10.9.6 Write integration tests for API endpoints
+    - [x] 10.9.7 Write E2E tests for critical dashboard flows (using Playwright or Cypress)
 
 - [ ] 11.0 Testing, Error Handling & Production Readiness
-  - [ ] 10.1 Error Handling & Resilience:
-    - [ ] 10.1.1 Implement comprehensive error handling for all API calls (Canny.io, XAI, Jira MCP) with retry logic
-    - [ ] 10.1.2 Implement dead letter queue mechanism for failed processing
-    - [ ] 10.1.3 Add alerting mechanism for critical failures (logging, email, etc.)
-    - [ ] 10.1.4 Implement manual intervention/retry capability for failed operations
-    - [ ] 10.1.5 Add input validation for all agent inputs
-    - [ ] 10.1.6 Implement LLM API failure fallback strategies
-  - [ ] 10.2 Comprehensive Testing:
-    - [ ] 10.2.1 Write unit tests for all agents (with mocked LLM and API responses)
-    - [ ] 10.2.2 Write integration tests for external API integrations (use sandbox/test accounts)
-    - [ ] 10.2.3 Write end-to-end tests for full workflow (Feedback → Analysis → Ticket → Resolution → Notification)
-    - [ ] 10.2.4 Test deterministic behavior (same inputs produce same outputs)
-    - [ ] 10.2.5 Test error scenarios and recovery
-    - [ ] 10.2.6 Test concurrent processing (if applicable)
-    - [ ] 10.2.7 Test database operations and transactions
-  - [ ] 10.3 Performance Optimization:
-    - [ ] 10.3.1 Optimize database queries (add indexes, query optimization)
-    - [ ] 10.3.2 Implement caching where appropriate (LLM responses, API responses - careful with determinism)
-    - [ ] 10.3.3 Optimize async operations (ensure proper async/await usage)
-    - [ ] 10.3.4 Profile and optimize slow operations
-  - [ ] 10.4 Monitoring & Observability:
-    - [ ] 10.4.1 Implement comprehensive logging (all agent decisions, API calls, errors)
-    - [ ] 10.4.2 Add metrics tracking (API usage, LLM costs, processing times, success rates)
-    - [ ] 10.4.3 Implement health check endpoints for monitoring
-    - [ ] 10.4.4 Add distributed tracing if needed
-  - [ ] 10.5 Documentation:
-    - [ ] 10.5.1 Write API documentation for all modules
-    - [ ] 10.5.2 Create agent documentation with examples
-    - [ ] 10.5.3 Update README with deployment instructions
-    - [ ] 10.5.4 Create architecture diagrams (workflow, data flow)
-    - [ ] 10.5.5 Document configuration options
-  - [ ] 10.6 Deployment Preparation:
-    - [ ] 10.6.1 Create `Dockerfile` for containerization
-    - [ ] 10.6.2 Create `docker-compose.yml` for local development with PostgreSQL
-    - [ ] 10.6.3 Create deployment scripts or CI/CD configuration
-    - [ ] 10.6.4 Set up production environment configuration
-    - [ ] 10.6.5 Implement database migration strategy
-    - [ ] 10.6.6 Create backup and recovery procedures
-    - [ ] 10.6.7 Implement security best practices (API key management, encryption, access controls)
-  - [ ] 10.7 Main Application Entry Point:
-    - [ ] 10.7.1 Create `bugbridge/main.py` as application entry point
-    - [ ] 10.7.2 Implement CLI interface for running workflows manually
-    - [ ] 10.7.3 Set up background scheduler for periodic tasks (feedback collection, monitoring, reporting)
-    - [ ] 10.7.4 Implement graceful shutdown handling
+  - [ ] 11.1 Error Handling & Resilience:
+    - [ ] 11.1.1 Implement comprehensive error handling for all API calls (Canny.io, XAI, Jira MCP) with retry logic
+    - [ ] 11.1.2 Implement dead letter queue mechanism for failed processing
+    - [ ] 11.1.3 Add alerting mechanism for critical failures (logging, email, etc.)
+    - [ ] 11.1.4 Implement manual intervention/retry capability for failed operations
+    - [ ] 11.1.5 Add input validation for all agent inputs
+    - [ ] 11.1.6 Implement LLM API failure fallback strategies
+  - [ ] 11.2 Comprehensive Testing:
+    - [ ] 11.2.1 Write unit tests for all agents (with mocked LLM and API responses)
+    - [ ] 11.2.2 Write integration tests for external API integrations (use sandbox/test accounts)
+    - [ ] 11.2.3 Write end-to-end tests for full workflow (Feedback → Analysis → Ticket → Resolution → Notification)
+    - [ ] 11.2.4 Test deterministic behavior (same inputs produce same outputs)
+    - [ ] 11.2.5 Test error scenarios and recovery
+    - [ ] 11.2.6 Test concurrent processing (if applicable)
+    - [ ] 11.2.7 Test database operations and transactions
+  - [ ] 11.3 Performance Optimization:
+    - [ ] 11.3.1 Optimize database queries (add indexes, query optimization)
+    - [ ] 11.3.2 Implement caching where appropriate (LLM responses, API responses - careful with determinism)
+    - [ ] 11.3.3 Optimize async operations (ensure proper async/await usage)
+    - [ ] 11.3.4 Profile and optimize slow operations
+  - [ ] 11.4 Monitoring & Observability:
+    - [ ] 11.4.1 Implement comprehensive logging (all agent decisions, API calls, errors)
+    - [ ] 11.4.2 Add metrics tracking (API usage, LLM costs, processing times, success rates)
+    - [ ] 11.4.3 Implement health check endpoints for monitoring
+    - [ ] 11.4.4 Add distributed tracing if needed
+  - [ ] 11.5 Documentation:
+    - [ ] 11.5.1 Write API documentation for all modules
+    - [ ] 11.5.2 Create agent documentation with examples
+    - [ ] 11.5.3 Update README with deployment instructions
+    - [ ] 11.5.4 Create architecture diagrams (workflow, data flow)
+    - [ ] 11.5.5 Document configuration options
+  - [ ] 11.6 Deployment Preparation:
+    - [ ] 11.6.1 Create `Dockerfile` for containerization
+    - [ ] 11.6.2 Create `docker-compose.yml` for local development with PostgreSQL
+    - [ ] 11.6.3 Create deployment scripts or CI/CD configuration
+    - [ ] 11.6.4 Set up production environment configuration
+    - [ ] 11.6.5 Implement database migration strategy
+    - [ ] 11.6.6 Create backup and recovery procedures
+    - [ ] 11.6.7 Implement security best practices (API key management, encryption, access controls)
+  - [ ] 11.7 Main Application Entry Point:
+    - [ ] 11.7.1 Create `bugbridge/main.py` as application entry point
+    - [ ] 11.7.2 Implement CLI interface for running workflows manually
+    - [ ] 11.7.3 Set up background scheduler for periodic tasks (feedback collection, monitoring, reporting)
+    - [ ] 11.7.4 Implement graceful shutdown handling
 

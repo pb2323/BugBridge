@@ -114,6 +114,18 @@ def retry_with_backoff(
                 except exceptions as e:
                     last_exception = e
 
+                    # Check if exception is non-retryable (has is_retryable attribute set to False)
+                    is_retryable = getattr(e, "is_retryable", True)
+                    if not is_retryable:
+                        logger.debug(
+                            f"Exception is non-retryable for {func.__name__}: {type(e).__name__}",
+                            extra={
+                                "function": func.__name__,
+                                "exception_type": type(e).__name__,
+                            },
+                        )
+                        raise
+
                     if attempt < default_max_retries:
                         delay = exponential_backoff_delay(
                             attempt,
@@ -219,6 +231,18 @@ def async_retry_with_backoff(
                     return await func(*args, **kwargs)
                 except exceptions as e:
                     last_exception = e
+
+                    # Check if exception is non-retryable (has is_retryable attribute set to False)
+                    is_retryable = getattr(e, "is_retryable", True)
+                    if not is_retryable:
+                        logger.debug(
+                            f"Exception is non-retryable for {func.__name__}: {type(e).__name__}",
+                            extra={
+                                "function": func.__name__,
+                                "exception_type": type(e).__name__,
+                            },
+                        )
+                        raise
 
                     if attempt < default_max_retries:
                         delay = exponential_backoff_delay(

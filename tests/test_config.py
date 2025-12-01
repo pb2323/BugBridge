@@ -153,13 +153,13 @@ class TestXAISettings:
         """Test creating valid XAISettings."""
         settings = XAISettings(
             api_key="test_xai_key",
-            model="grok-2",
+            model="grok-4-fast-reasoning",
             temperature=0.0,
             max_output_tokens=2048,
         )
 
         assert settings.api_key.get_secret_value() == "test_xai_key"
-        assert settings.model == "grok-2"
+        assert settings.model == "grok-4-fast-reasoning"
         assert settings.temperature == 0.0
         assert settings.max_output_tokens == 2048
 
@@ -167,7 +167,7 @@ class TestXAISettings:
         """Test XAISettings with default values."""
         settings = XAISettings(api_key="test_key")
 
-        assert settings.model == "grok-2"  # Default
+        assert settings.model == "grok-4-fast-reasoning"  # Default
         assert settings.temperature == 0.0  # Default
         assert settings.max_output_tokens == 2048  # Default
 
@@ -190,6 +190,7 @@ class TestXAISettings:
         # Valid models
         XAISettings(api_key="key", model="grok-beta")
         XAISettings(api_key="key", model="grok-2")
+        XAISettings(api_key="key", model="grok-4-fast-reasoning")
 
         # Invalid model
         with pytest.raises(ValidationError):

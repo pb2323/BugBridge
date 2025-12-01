@@ -10,7 +10,7 @@ variables in higher environments.
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import List, Literal, Optional
+from typing import Dict, List, Literal, Optional
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field, HttpUrl, SecretStr, validator
@@ -34,6 +34,10 @@ class CannySettings(BaseModel):
     api_key: SecretStr = Field(..., description="Canny.io API token")
     subdomain: str = Field(..., description="Canny.io company subdomain")
     board_id: str = Field(..., description="Default board ID to sync feedback from")
+    admin_user_id: Optional[str] = Field(
+        None,
+        description="Canny.io admin user ID for posting comments and notifications",
+    )
     sync_interval_minutes: int = Field(
         5,
         description="Polling interval for syncing feedback posts",
@@ -56,6 +60,38 @@ class JiraSettings(BaseModel):
         default_factory=lambda: ["Done", "Resolved", "Closed"],
         description="Statuses that indicate an issue is resolved",
     )
+    monitoring_poll_interval_seconds: int = Field(
+        30,
+        ge=5,
+        le=3600,
+        description="Interval in seconds between status checks when monitoring tickets (min: 5s, max: 1 hour)",
+    )
+    monitoring_max_attempts: Optional[int] = Field(
+        None,
+        ge=1,
+        description="Maximum number of polling attempts before timeout (None for unlimited)",
+    )
+    monitoring_timeout_seconds: Optional[int] = Field(
+        None,
+        ge=60,
+        description="Maximum time in seconds to monitor a ticket before timeout (None for unlimited)",
+    )
+    assignment_strategy: Literal["none", "round_robin", "component_based", "priority_based"] = Field(
+        "none",
+        description="Strategy for automatic ticket assignment (none, round_robin, component_based, priority_based)",
+    )
+    round_robin_assignees: List[str] = Field(
+        default_factory=list,
+        description="List of assignee identifiers for round-robin assignment (account IDs or emails)",
+    )
+    component_assignees: Dict[str, str] = Field(
+        default_factory=dict,
+        description="Dictionary mapping component names to assignee identifiers",
+    )
+    priority_assignees: Dict[str, str] = Field(
+        default_factory=dict,
+        description="Dictionary mapping priority levels (Critical, High, Medium, Low) to assignee identifiers",
+    )
 
     @validator("resolution_done_statuses", each_item=True)
     def _strip_status(cls, status: str) -> str:  # noqa: D401
@@ -65,14 +101,22 @@ class JiraSettings(BaseModel):
             raise ValueError("Resolution status entries cannot be blank")
         return cleaned
 
+    @validator("assignment_strategy")
+    def _validate_assignment_strategy(cls, v: str) -> str:  # noqa: D401
+        """Validate assignment strategy is valid."""
+        valid_strategies = ["none", "round_robin", "component_based", "priority_based"]
+        if v not in valid_strategies:
+            raise ValueError(f"assignment_strategy must be one of: {valid_strategies}")
+        return v
+
 
 class XAISettings(BaseModel):
     """Settings for interacting with the XAI (Grok) API."""
 
     api_key: SecretStr = Field(..., description="XAI API key")
-    model: Literal["grok-beta", "grok-2"] = Field(
-        "grok-2",
-        description="Primary Grok model to use for deterministic agents",
+    model: Literal["grok-beta", "grok-2", "grok-4-fast-reasoning"] = Field(
+        "grok-4-fast-reasoning",
+        description="Primary Grok model to use for deterministic agents and reasoning",
     )
     temperature: float = Field(
         0.0,
@@ -104,6 +148,25 @@ class DatabaseSettings(BaseModel):
         return value
 
 
+class EmailSettings(BaseModel):
+    """Settings for email delivery."""
+
+    smtp_host: Optional[str] = Field(None, description="SMTP server hostname")
+    smtp_port: int = Field(587, ge=1, le=65535, description="SMTP server port")
+    smtp_username: Optional[str] = Field(None, description="SMTP username for authentication")
+    smtp_password: Optional[SecretStr] = Field(None, description="SMTP password for authentication")
+    use_tls: bool = Field(True, description="Whether to use TLS encryption")
+    from_email: Optional[str] = Field(None, description="Default sender email address")
+
+
+class FileStorageSettings(BaseModel):
+    """Settings for file storage."""
+
+    enabled: bool = Field(True, description="Enable file storage for reports")
+    base_path: str = Field("./reports", description="Base directory path for storing reports")
+    create_dirs: bool = Field(True, description="Create directories if they don't exist")
+
+
 class ReportingSettings(BaseModel):
     """Settings for scheduled reporting and digest emails."""
 
@@ -116,6 +179,9 @@ class ReportingSettings(BaseModel):
         default_factory=list,
         description="List of email recipients for reports",
     )
+    email_enabled: bool = Field(True, description="Enable email delivery of reports")
+    file_storage_enabled: bool = Field(True, description="Enable file storage of reports")
+    slack_enabled: bool = Field(False, description="Enable Slack delivery (future feature)")
 
     @validator("recipients", pre=True)
     def _parse_recipients(cls, value):  # noqa: D401, ANN001
@@ -143,6 +209,15 @@ class AgentSettings(BaseModel):
 
 class Settings(BaseSettings):
     """Top-level application settings container."""
+
+    canny: CannySettings = Field(default_factory=CannySettings)
+    jira: JiraSettings = Field(default_factory=JiraSettings)
+    xai: XAISettings = Field(default_factory=XAISettings)
+    database: DatabaseSettings = Field(default_factory=DatabaseSettings)
+    reporting: ReportingSettings = Field(default_factory=ReportingSettings)
+    email: EmailSettings = Field(default_factory=EmailSettings)
+    file_storage: FileStorageSettings = Field(default_factory=FileStorageSettings)
+    agent: AgentSettings = Field(default_factory=AgentSettings)
 
     model_config = SettingsConfigDict(
         env_file=".env",
