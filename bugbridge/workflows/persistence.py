@@ -12,6 +12,7 @@ from datetime import UTC, datetime
 from typing import Any, Dict, Optional
 from uuid import UUID, uuid4
 
+from pydantic import BaseModel
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -21,6 +22,44 @@ from bugbridge.models.state import BugBridgeState
 from bugbridge.utils.logging import get_logger
 
 logger = get_logger(__name__)
+
+
+def _convert_to_json_serializable(obj: Any) -> Any:
+    """
+    Recursively convert Pydantic types and other non-JSON-serializable objects to JSON-serializable types.
+    
+    Args:
+        obj: Object to convert.
+        
+    Returns:
+        JSON-serializable version of the object.
+    """
+    # Handle Pydantic models
+    if isinstance(obj, BaseModel):
+        return obj.model_dump(mode="json")
+    
+    # Handle lists
+    if isinstance(obj, list):
+        return [_convert_to_json_serializable(item) for item in obj]
+    
+    # Handle dictionaries
+    if isinstance(obj, dict):
+        return {key: _convert_to_json_serializable(value) for key, value in obj.items()}
+    
+    # Handle datetime
+    if isinstance(obj, datetime):
+        return obj.isoformat()
+    
+    # Handle UUID
+    if isinstance(obj, UUID):
+        return str(obj)
+    
+    # Handle other objects with __str__ (includes HttpUrl, AnyUrl, etc.)
+    if hasattr(obj, "__class__") and obj.__class__.__module__ == "pydantic_core._pydantic_core":
+        return str(obj)
+    
+    # Return as-is for primitive types
+    return obj
 
 
 async def save_workflow_state(
@@ -222,9 +261,17 @@ def _serialize_state_for_storage(state: BugBridgeState) -> Dict[str, Any]:
         else:
             state_dict["priority_score"] = priority
 
-    # Serialize simple fields
+    # Serialize simple fields (convert Pydantic types to JSON-serializable types)
     state_dict["jira_ticket_id"] = state.get("jira_ticket_id")
-    state_dict["jira_ticket_url"] = state.get("jira_ticket_url")
+    
+    # Convert HttpUrl to string if present
+    jira_ticket_url = state.get("jira_ticket_url")
+    if jira_ticket_url is not None:
+        # Handle Pydantic HttpUrl or regular string
+        state_dict["jira_ticket_url"] = str(jira_ticket_url)
+    else:
+        state_dict["jira_ticket_url"] = None
+    
     state_dict["jira_ticket_status"] = state.get("jira_ticket_status")
     state_dict["workflow_status"] = state.get("workflow_status")
     state_dict["errors"] = state.get("errors", [])
@@ -239,7 +286,9 @@ def _serialize_state_for_storage(state: BugBridgeState) -> Dict[str, Any]:
     # Serialize metadata
     state_dict["metadata"] = state.get("metadata", {})
 
-    return state_dict
+    # Final pass: ensure all values are JSON-serializable
+    # This catches any remaining Pydantic types (like HttpUrl) that might have been missed
+    return _convert_to_json_serializable(state_dict)
 
 
 def _deserialize_state_from_storage(state_dict: Dict[str, Any]) -> BugBridgeState:

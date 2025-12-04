@@ -6,7 +6,8 @@ FastAPI endpoints for user authentication and session management.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+UTC = timezone.utc
 from typing import Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -112,7 +113,24 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
     Returns:
         True if password matches, False otherwise.
     """
-    return pwd_context.verify(plain_password, hashed_password)
+    # Use bcrypt directly to avoid passlib compatibility issues
+    import bcrypt
+    # Ensure both are bytes
+    if isinstance(plain_password, str):
+        plain_password_bytes = plain_password.encode('utf-8')
+    else:
+        plain_password_bytes = plain_password
+    if isinstance(hashed_password, str):
+        hashed_password_bytes = hashed_password.encode('utf-8')
+    else:
+        hashed_password_bytes = hashed_password
+    # Truncate password to 72 bytes max
+    if len(plain_password_bytes) > 72:
+        plain_password_bytes = plain_password_bytes[:72]
+    try:
+        return bcrypt.checkpw(plain_password_bytes, hashed_password_bytes)
+    except Exception:
+        return False
 
 
 def get_password_hash(password: str) -> str:
@@ -125,7 +143,20 @@ def get_password_hash(password: str) -> str:
     Returns:
         Hashed password.
     """
-    return pwd_context.hash(password)
+    # Use bcrypt directly to avoid passlib compatibility issues
+    import bcrypt
+    # Ensure password is bytes
+    if isinstance(password, str):
+        password_bytes = password.encode('utf-8')
+    else:
+        password_bytes = password
+    # Truncate to 72 bytes max (bcrypt limit)
+    if len(password_bytes) > 72:
+        password_bytes = password_bytes[:72]
+    # Generate salt and hash
+    salt = bcrypt.gensalt()
+    hashed = bcrypt.hashpw(password_bytes, salt)
+    return hashed.decode('utf-8')
 
 
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:

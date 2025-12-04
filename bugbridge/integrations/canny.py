@@ -9,8 +9,10 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from typing import Any, Dict, List, Optional
+import os
 
 import httpx
+from pydantic_settings import SettingsError
 
 from bugbridge.config import get_settings
 from bugbridge.models.feedback import FeedbackPost
@@ -56,19 +58,51 @@ class CannyClient:
             subdomain: Canny.io subdomain (defaults to config).
             timeout: Request timeout in seconds.
             max_retries: Maximum retry attempts for failed requests.
+        Prefers configuration from Settings.canny, but gracefully falls back to
+        environment variables when global settings loading fails (for example,
+        due to unrelated sections like `jira` being misconfigured).
         """
+        # Preferred path: load from Settings
         try:
             settings = get_settings()
             self.api_key = api_key or settings.canny.api_key.get_secret_value()
             self.subdomain = subdomain or settings.canny.subdomain
+        except SettingsError as e:
+            # Settings failed (often due to another section like `jira`), so we
+            # fall back to raw environment variables for Canny-specific config.
+            logger.warning(
+                "SettingsError while loading Canny configuration; "
+                "falling back to CANNY_API_KEY and CANNY_SUBDOMAIN env vars. "
+                "Original error: %s",
+                str(e),
+            )
+
+            env_api_key = api_key or os.getenv("CANNY_API_KEY")
+            env_subdomain = subdomain or os.getenv("CANNY_SUBDOMAIN")
+
+            if not env_api_key:
+                raise ValueError(
+                    "Canny API key not available. Set CANNY_API_KEY in your environment or .env file."
+                ) from e
+            if not env_subdomain:
+                raise ValueError(
+                    "Canny subdomain not available. Set CANNY_SUBDOMAIN in your environment or .env file."
+                ) from e
+
+            self.api_key = env_api_key
+            self.subdomain = env_subdomain
         except Exception:
-            # Config not available, use provided values or raise
-            if not api_key:
+            # Generic fallback: explicit params or env vars
+            env_api_key = api_key or os.getenv("CANNY_API_KEY")
+            env_subdomain = subdomain or os.getenv("CANNY_SUBDOMAIN")
+
+            if not env_api_key:
                 raise ValueError("API key must be provided if config is not available")
-            if not subdomain:
+            if not env_subdomain:
                 raise ValueError("Subdomain must be provided if config is not available")
-            self.api_key = api_key
-            self.subdomain = subdomain
+
+            self.api_key = env_api_key
+            self.subdomain = env_subdomain
 
         self.timeout = timeout
         self.max_retries = max_retries
@@ -261,6 +295,20 @@ class CannyClient:
             try:
                 settings = get_settings()
                 board_id = settings.canny.board_id
+            except SettingsError as e:
+                logger.warning(
+                    "SettingsError while loading Canny board_id; "
+                    "falling back to CANNY_BOARD_ID env var. "
+                    "Original error: %s",
+                    str(e),
+                )
+                env_board_id = os.getenv("CANNY_BOARD_ID")
+                if not env_board_id:
+                    raise ValueError(
+                        "board_id must be provided if config is not available. "
+                        "Set CANNY_BOARD_ID in your environment or .env file."
+                    ) from e
+                board_id = env_board_id
             except Exception:
                 raise ValueError("board_id must be provided if config is not available")
 

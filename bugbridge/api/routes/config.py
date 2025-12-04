@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field, model_validator
 from bugbridge.api.dependencies import get_authenticated_user, require_admin
 from bugbridge.config import get_settings
 from bugbridge.utils.logging import get_logger
+from pydantic_settings.exceptions import SettingsError
 
 logger = get_logger(__name__)
 
@@ -56,32 +57,62 @@ async def get_config(
 
     Returns sanitized configuration (sensitive values like API keys are masked).
     """
-    try:
-        settings = get_settings()
+    # Build response with sanitized values
+    def sanitize_secret(value: Any) -> Any:
+        """Mask sensitive values."""
+        if isinstance(value, str) and ("key" in str(value).lower() or "password" in str(value).lower()):
+            return "***"
+        return value
 
-        # Build response with sanitized values
-        def sanitize_secret(value: Any) -> Any:
-            """Mask sensitive values."""
-            if isinstance(value, str) and ("key" in str(value).lower() or "password" in str(value).lower()):
-                return "***"
-            return value
-
-        def to_dict(obj: Any) -> Dict[str, Any]:
-            """Convert Pydantic model to dict with sanitization."""
-            if hasattr(obj, "model_dump"):
+    def to_dict(obj: Any) -> Dict[str, Any]:
+        """Convert Pydantic model to dict with sanitization."""
+        if obj is None:
+            return {}
+        if hasattr(obj, "model_dump"):
+            try:
                 data = obj.model_dump()
                 return {k: sanitize_secret(v) for k, v in data.items()}
-            return {}
+            except Exception:
+                return {}
+        return {}
 
+    try:
+        settings = get_settings()
+        
         return ConfigResponse(
-            canny=to_dict(settings.canny),
-            jira=to_dict(settings.jira),
-            xai=to_dict(settings.xai),
-            database=to_dict(settings.database),
-            reporting=to_dict(settings.reporting),
-            agent=to_dict(settings.agent),
+            canny=to_dict(getattr(settings, "canny", None)),
+            jira=to_dict(getattr(settings, "jira", None)),
+            xai=to_dict(getattr(settings, "xai", None)),
+            database=to_dict(getattr(settings, "database", None)),
+            reporting=to_dict(getattr(settings, "reporting", None)),
+            agent=to_dict(getattr(settings, "agent", None)),
         )
-
+    except SettingsError as e:
+        logger.warning(
+            f"SettingsError loading configuration: {str(e)}. "
+            "This usually indicates a malformed environment variable. "
+            "Returning fallback configuration with error messages.",
+            exc_info=False
+        )
+        # Return fallback configuration when settings fail to load
+        # Extract the field name from the error message if possible
+        error_message = str(e)
+        if "jira" in error_message.lower():
+            jira_error = {
+                "error": "Failed to load Jira configuration. Check your .env file - ensure JIRA__SERVER_URL and JIRA__PROJECT_KEY are set correctly. Complex nested values (like dictionaries) must be valid JSON or omitted.",
+                "hint": "For Jira settings, use format: JIRA__SERVER_URL=http://... and JIRA__PROJECT_KEY=PROJ"
+            }
+        else:
+            jira_error = {"error": "Configuration loading failed. Please check your .env file."}
+        
+        return ConfigResponse(
+            canny={},
+            jira=jira_error,
+            xai={},
+            database={},
+            reporting={},
+            agent={},
+        )
     except Exception as e:
         logger.error(f"Failed to get configuration: {str(e)}", exc_info=True)
         raise HTTPException(

@@ -6,19 +6,19 @@
 
 'use client';
 
-import { DashboardLayout } from '../../components/layout/DashboardLayout';
-import { ErrorBoundary } from '../../components/common/ErrorBoundary';
-import { useMetrics } from '../../hooks/useMetrics';
-import { MetricCard } from '../../components/metrics/MetricCard';
-import { BugsVsFeaturesChart } from '../../components/metrics/BugsVsFeaturesChart';
-import { SentimentChart } from '../../components/metrics/SentimentChart';
-import { PriorityList } from '../../components/metrics/PriorityList';
-import { TimeSeriesChart } from '../../components/metrics/TimeSeriesChart';
-import { JiraStatusChart } from '../../components/metrics/JiraStatusChart';
-import { PriorityScoreChart } from '../../components/metrics/PriorityScoreChart';
-import { BurningIssuesList } from '../../components/metrics/BurningIssuesList';
-import { LoadingSpinner } from '../../components/common/LoadingSpinner';
-import { SkeletonCard, SkeletonChart } from '../../components/common/SkeletonLoader';
+import { DashboardLayout } from '@/components/layout/DashboardLayout';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { useMetrics } from '@/hooks/useMetrics';
+import { MetricCard } from '@/components/metrics/MetricCard';
+import { BugsVsFeaturesChart } from '@/components/metrics/BugsVsFeaturesChart';
+import { SentimentChart } from '@/components/metrics/SentimentChart';
+import { PriorityList } from '@/components/metrics/PriorityList';
+import { TimeSeriesChart } from '@/components/metrics/TimeSeriesChart';
+import { JiraStatusChart } from '@/components/metrics/JiraStatusChart';
+import { PriorityScoreChart } from '@/components/metrics/PriorityScoreChart';
+import { BurningIssuesList } from '@/components/metrics/BurningIssuesList';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { SkeletonCard, SkeletonChart } from '@/components/common/SkeletonLoader';
 import { formatDistanceToNow } from 'date-fns';
 import { useState } from 'react';
 

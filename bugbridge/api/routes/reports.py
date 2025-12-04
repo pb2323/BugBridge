@@ -10,12 +10,14 @@ from datetime import datetime
 from typing import Any, Dict, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from bugbridge.api.exceptions import NotFoundError, ValidationError
 from pydantic import BaseModel, Field
 
 from bugbridge.agents.reporting import get_reporting_agent
 from bugbridge.api.dependencies import get_authenticated_user, require_admin
+from bugbridge.database.connection import get_session
 from bugbridge.models.report_filters import ReportFilters
 from bugbridge.utils.logging import get_logger
 from bugbridge.workflows.reporting import execute_reporting_workflow
@@ -155,6 +157,7 @@ async def generate_report(
 @router.get("", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def list_reports(
     current_user = Depends(get_authenticated_user),
+    session: AsyncSession = Depends(get_session),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     page_size: int = Query(20, ge=1, le=100, description="Number of items per page"),
     report_type: Optional[str] = Query(None, description="Filter by report type"),
@@ -164,11 +167,10 @@ async def list_reports(
     """
     List historical reports with filtering and pagination.
     """
-    from bugbridge.database.connection import get_session
     from bugbridge.database.models import Report as DBReport
     from sqlalchemy import and_, func, select
 
-    async with get_session() as session:
+    try:
         # Build query
         query = select(DBReport)
 
@@ -222,17 +224,23 @@ async def list_reports(
             "page_size": page_size,
             "total_pages": total_pages,
         }
+    except Exception as e:
+        logger.error(f"Error fetching reports: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch reports: {str(e)}"
+        )
 
 
 @router.get("/{report_id}", response_model=Dict[str, Any], status_code=status.HTTP_200_OK)
 async def get_report(
     report_id: str,
     current_user = Depends(get_authenticated_user),
+    session: AsyncSession = Depends(get_session),
 ) -> Dict[str, Any]:
     """
     Get specific report details including content and metrics.
     """
-    from bugbridge.database.connection import get_session
     from bugbridge.database.models import Report as DBReport
     from sqlalchemy import select
     from uuid import UUID as UUIDType
@@ -245,7 +253,7 @@ async def get_report(
             details={"field": "report_id", "format": "UUID"},
         )
 
-    async with get_session() as session:
+    try:
         query = select(DBReport).where(DBReport.id == report_uuid)
         result = await session.execute(query)
         report = result.scalar_one_or_none()
@@ -265,6 +273,16 @@ async def get_report(
             "content": report.report_content,
             "metrics": report.metrics,
         }
+    except NotFoundError:
+        raise
+    except ValidationError:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching report {report_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch report: {str(e)}"
+        )
 
 
 @router.post("/generate/workflow", response_model=ReportGenerationResponse, status_code=status.HTTP_200_OK)

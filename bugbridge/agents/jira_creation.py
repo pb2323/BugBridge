@@ -63,13 +63,13 @@ def determine_issue_type(bug_detection: Optional[BugDetectionResult]) -> Literal
 
     Returns:
         Jira issue type (Bug, Story, or Task).
+    
+    Note: For Next-Gen Jira projects, only Task and Epic are supported.
+    We always return "Task" regardless of bug detection results.
     """
-    if bug_detection and bug_detection.is_bug:
-        return "Bug"
-    else:
-        # Feature requests can be Stories or Tasks
-        # Defaulting to Story for feature requests
-        return "Story"
+    # Next-Gen Jira projects typically only support Task and Epic issue types
+    # Return "Task" for both bugs and feature requests
+    return "Task"
 
 
 def generate_labels(
@@ -226,7 +226,12 @@ def format_jira_summary(
         Formatted summary text (max 255 characters for Jira).
     """
     # Add prefix based on bug detection
-    prefix = "[Bug] " if (bug_detection and bug_detection.is_bug) else "[Feature] "
+    # Note: For Next-Gen projects, we use Task type for everything
+    # But we still differentiate in the summary for clarity
+    if bug_detection and bug_detection.is_bug:
+        prefix = "[Bug] "
+    else:
+        prefix = "[Feature] "
 
     # Use feedback title as base
     summary = feedback_post.title.strip()

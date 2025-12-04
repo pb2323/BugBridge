@@ -5,10 +5,18 @@ Async SQLAlchemy engine and session factory setup.
 """
 
 import os
+from contextlib import asynccontextmanager
+from pathlib import Path
 from typing import AsyncIterator, Optional
 
+from dotenv import load_dotenv
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 from sqlalchemy.orm import Session
+
+# Load .env file if it exists
+env_path = Path(__file__).parent.parent.parent / ".env"
+if env_path.exists():
+    load_dotenv(env_path)
 
 DATABASE_URL_ENV_VAR = "DATABASE_URL"
 DEFAULT_DATABASE_URL = "postgresql+asyncpg://user:password@localhost:5432/bugbridge"
@@ -54,8 +62,13 @@ async def get_session() -> AsyncIterator[AsyncSession]:
         yield session
 
 
+@asynccontextmanager
 async def get_session_context() -> AsyncIterator[Session]:
-    """Async context manager for database session usage."""
+    """Async context manager for database session usage.
+
+    This wraps the async generator in an `asynccontextmanager` so it can be
+    used with `async with get_session_context() as session:` across the codebase.
+    """
     session_factory = get_session_factory()
     async with session_factory() as session:
         try:

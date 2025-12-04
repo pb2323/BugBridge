@@ -58,9 +58,9 @@ class FeedbackCollectionScheduler:
         self.job_id = "feedback_collection_job"
 
     async def _collect_feedback_job(self) -> None:
-        """Scheduled job function to collect feedback."""
+        """Scheduled job function to collect and process feedback."""
         logger.info(
-            "Starting scheduled feedback collection",
+            "Starting scheduled feedback collection and processing",
             extra={
                 "board_id": self.board_id,
                 "interval_minutes": self.sync_interval_minutes,
@@ -72,13 +72,19 @@ class FeedbackCollectionScheduler:
                 board_id=self.board_id,
                 limit=100,  # Collect up to 100 posts per run
                 status=None,  # Collect all statuses
+                process_through_workflow=True,  # Automatically process through workflow
             )
 
             if result["success"]:
                 logger.info(
-                    f"Successfully collected {result['collected_count']} new posts",
+                    f"Successfully collected {result['collected_count']} new posts, "
+                    f"processed {result.get('processed_count', 0)}, "
+                    f"created {result.get('jira_tickets_created', 0)} Jira tickets",
                     extra={
                         "collected_count": result["collected_count"],
+                        "processed_count": result.get("processed_count", 0),
+                        "successful_processing": result.get("successful_processing", 0),
+                        "jira_tickets_created": result.get("jira_tickets_created", 0),
                         "board_id": self.board_id,
                     },
                 )

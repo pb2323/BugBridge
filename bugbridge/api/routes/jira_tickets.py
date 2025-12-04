@@ -64,6 +64,7 @@ class JiraTicketListResponse(BaseModel):
 @router.get("", response_model=JiraTicketListResponse, status_code=status.HTTP_200_OK)
 async def list_jira_tickets(
     current_user = Depends(get_authenticated_user),
+    session: AsyncSession = Depends(get_session),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     page_size: int = Query(20, ge=1, le=100, description="Number of items per page"),
     project_keys: Optional[str] = Query(None, description="Comma-separated list of project keys to filter by"),
@@ -87,7 +88,7 @@ async def list_jira_tickets(
     - Resolution status
     - Feedback linkage
     """
-    async with get_session() as session:
+    try:
         # Build base query
         query = select(DBJiraTicket)
 
@@ -193,19 +194,26 @@ async def list_jira_tickets(
             page_size=page_size,
             total_pages=total_pages,
         )
+    except Exception as e:
+        logger.error(f"Error fetching Jira tickets: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch Jira tickets: {str(e)}"
+        )
 
 
 @router.get("/{ticket_id}", response_model=JiraTicketResponse, status_code=status.HTTP_200_OK)
 async def get_jira_ticket(
     ticket_id: UUID,
     current_user = Depends(get_authenticated_user),
+    session: AsyncSession = Depends(get_session),
 ) -> JiraTicketResponse:
     """
     Get detailed information about a specific Jira ticket.
 
     Includes linked feedback post information if available.
     """
-    async with get_session() as session:
+    try:
         # Get Jira ticket
         query = select(DBJiraTicket).where(DBJiraTicket.id == ticket_id)
         result = await session.execute(query)
@@ -239,6 +247,14 @@ async def get_jira_ticket(
             feedback_post_id=ticket.feedback_post_id,
             feedback_post_title=feedback_post.title if feedback_post else None,
             feedback_post_canny_id=feedback_post.canny_post_id if feedback_post else None,
+        )
+    except NotFoundError:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching Jira ticket {ticket_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch Jira ticket: {str(e)}"
         )
 
 

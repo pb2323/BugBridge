@@ -6,10 +6,11 @@ FastAPI endpoints for aggregated metrics and statistics.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime, timedelta
+from datetime import datetime, timedelta, timezone
+UTC = timezone.utc
 from typing import Any, Dict, List, Optional
 
-from fastapi import APIRouter, Query, status
+from fastapi import APIRouter, HTTPException, Query, status
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -76,6 +77,7 @@ class MetricsResponse(BaseModel):
 @router.get("", response_model=MetricsResponse, status_code=status.HTTP_200_OK)
 async def get_metrics(
     current_user = Depends(get_authenticated_user),
+    session: AsyncSession = Depends(get_session),
     start_date: Optional[datetime] = Query(None, description="Start date for metrics calculation"),
     end_date: Optional[datetime] = Query(None, description="End date for metrics calculation"),
 ) -> MetricsResponse:
@@ -86,7 +88,7 @@ async def get_metrics(
     If only start_date is provided, calculates from that date to now.
     If only end_date is provided, calculates from the beginning to that date.
     """
-    async with get_session() as session:
+    try:
         # Determine date range
         if start_date is None and end_date is None:
             # All time
@@ -260,6 +262,12 @@ async def get_metrics(
             recent_tickets=recent_tickets,
             recent_resolutions=recent_resolutions,
             top_priority_items=top_priority_items,
+        )
+    except Exception as e:
+        logger.error(f"Error fetching metrics: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch metrics: {str(e)}"
         )
 
 

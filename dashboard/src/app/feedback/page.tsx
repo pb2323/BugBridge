@@ -6,16 +6,20 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo, useState } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { ErrorBoundary } from '../../components/common/ErrorBoundary';
-import { FeedbackTable, FeedbackPost } from '../../components/feedback/FeedbackTable';
+import { FeedbackTable } from '../../components/feedback/FeedbackTable';
 import { FeedbackFilters, FeedbackFilters as FeedbackFiltersType } from '../../components/feedback/FeedbackFilters';
 import { Pagination } from '../../components/feedback/Pagination';
 import { useFeedbackList } from '../../hooks/useFeedback';
 import { SkeletonCard } from '../../components/common/SkeletonLoader';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { feedbackApi } from '../../services/api/feedback';
 
 export default function FeedbackPage() {
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortBy, setSortBy] = useState<string>('collected_at');
@@ -45,6 +49,62 @@ export default function FeedbackPage() {
   }, [page, pageSize, sortBy, sortOrder, filters]);
 
   const { data, isLoading, error, refetch } = useFeedbackList(apiParams);
+
+  const [refreshStatus, setRefreshStatus] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const refreshMutation = useMutation({
+    mutationFn: () => feedbackApi.refresh(),
+    onMutate: () => {
+      // Set loading state immediately when mutation starts
+      setIsRefreshing(true);
+      setRefreshStatus('Fetching posts from Canny.io and processing...');
+    },
+    onSuccess: (data) => {
+      // Invalidate feedback list so it refetches with latest data
+      queryClient.invalidateQueries({ queryKey: ['feedback', 'list'] });
+      
+      // Show success message with statistics
+      const message = `✅ Successfully refreshed from Canny! Collected: ${data.collected_count} posts, Processed: ${data.processed_count}, Analyzed: ${data.successful_processing}, Jira tickets created: ${data.jira_tickets_created}`;
+      setRefreshStatus(message);
+      setIsRefreshing(false);
+      
+      // Clear message after 8 seconds (longer for more data)
+      setTimeout(() => setRefreshStatus(null), 8000);
+    },
+    onError: (error: any) => {
+      setRefreshStatus(`❌ Error: ${error?.response?.data?.detail || 'Failed to refresh from Canny'}`);
+      setIsRefreshing(false);
+      setTimeout(() => setRefreshStatus(null), 8000);
+    },
+  });
+
+  const [processingPostId, setProcessingPostId] = useState<string | null>(null);
+
+  const processSingleMutation = useMutation({
+    mutationFn: (postId: string) => feedbackApi.processSingle(postId),
+    onMutate: (postId) => {
+      setProcessingPostId(postId);
+    },
+    onSuccess: (data, postId) => {
+      // Invalidate feedback list so it refetches with updated data
+      queryClient.invalidateQueries({ queryKey: ['feedback', 'list'] });
+      
+      // Show success message
+      const message = data.jira_tickets_created > 0 
+        ? `Post processed successfully! Jira ticket created.`
+        : `Post processed successfully! Priority below threshold, no Jira ticket created.`;
+      setRefreshStatus(message);
+      
+      setProcessingPostId(null);
+      setTimeout(() => setRefreshStatus(null), 5000);
+    },
+    onError: (error: any, postId) => {
+      setRefreshStatus(`Error: ${error?.response?.data?.detail || 'Failed to process post'}`);
+      setProcessingPostId(null);
+      setTimeout(() => setRefreshStatus(null), 5000);
+    },
+  });
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -105,6 +165,15 @@ export default function FeedbackPage() {
     <ErrorBoundary>
       <DashboardLayout>
         <div className="space-y-6">
+          {/* Refresh Status Message */}
+          {refreshStatus && (
+            <div className={`rounded-md p-4 ${refreshStatus.startsWith('Error') ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+              <p className={refreshStatus.startsWith('Error') ? 'text-red-800 text-sm' : 'text-green-800 text-sm'}>
+                {refreshStatus}
+              </p>
+            </div>
+          )}
+
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
@@ -114,6 +183,25 @@ export default function FeedbackPage() {
               </p>
             </div>
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => refreshMutation.mutate()}
+                disabled={isRefreshing || refreshMutation.isPending || refreshMutation.isLoading}
+                className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 transition-all"
+              >
+                {isRefreshing || refreshMutation.isPending || refreshMutation.isLoading ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    <span>Fetching & Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>Refresh from Canny</span>
+                  </>
+                )}
+              </button>
               <select
                 value={pageSize}
                 onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}
@@ -144,6 +232,8 @@ export default function FeedbackPage() {
               sortBy={sortBy}
               sortOrder={sortOrder}
               onSort={handleSort}
+              onProcess={(postId) => processSingleMutation.mutate(postId)}
+              processingPostId={processingPostId}
             />
           </div>
 

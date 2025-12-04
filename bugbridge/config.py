@@ -13,8 +13,8 @@ from functools import lru_cache
 from typing import Dict, List, Literal, Optional
 
 from dotenv import load_dotenv
-from pydantic import BaseModel, Field, HttpUrl, SecretStr, validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel, Field, HttpUrl, SecretStr, field_validator
+from pydantic_settings import BaseSettings, SettingsConfigDict, SettingsError
 
 # Load .env file early so BaseSettings can pick up default values during
 # instantiation in local development environments.
@@ -53,8 +53,14 @@ class CannySettings(BaseModel):
 
 class JiraSettings(BaseModel):
     """Configuration for the Jira MCP integration."""
+    
+    model_config = {"json_schema_extra": {"env_prefix": "JIRA__"}}
 
     server_url: HttpUrl = Field(..., description="Base URL of the Jira MCP server")
+    instance_url: Optional[HttpUrl] = Field(
+        None,
+        description="Base URL of the Jira instance (e.g., https://your-company.atlassian.net). Used for building ticket browse URLs. If not set, will be inferred from server responses.",
+    )
     project_key: str = Field(..., description="Default Jira project key")
     resolution_done_statuses: List[str] = Field(
         default_factory=lambda: ["Done", "Resolved", "Closed"],
@@ -93,15 +99,17 @@ class JiraSettings(BaseModel):
         description="Dictionary mapping priority levels (Critical, High, Medium, Low) to assignee identifiers",
     )
 
-    @validator("resolution_done_statuses", each_item=True)
-    def _strip_status(cls, status: str) -> str:  # noqa: D401
+    @field_validator("resolution_done_statuses")
+    @classmethod
+    def _strip_statuses(cls, v: List[str]) -> List[str]:  # noqa: D401
         """Ensure statuses are normalized without surrounding whitespace."""
-        cleaned = status.strip()
-        if not cleaned:
+        cleaned = [status.strip() for status in v]
+        if any(not s for s in cleaned):
             raise ValueError("Resolution status entries cannot be blank")
         return cleaned
 
-    @validator("assignment_strategy")
+    @field_validator("assignment_strategy")
+    @classmethod
     def _validate_assignment_strategy(cls, v: str) -> str:  # noqa: D401
         """Validate assignment strategy is valid."""
         valid_strategies = ["none", "round_robin", "component_based", "priority_based"]
@@ -140,7 +148,8 @@ class DatabaseSettings(BaseModel):
     pool_size: int = Field(10, ge=1, description="Default async connection pool size")
     pool_timeout: int = Field(30, ge=1, description="Pool acquire timeout in seconds")
 
-    @validator("url")
+    @field_validator("url")
+    @classmethod
     def _validate_url(cls, value: str) -> str:
         """Ensure the database URL uses asyncpg so SQLAlchemy can run async."""
         if "asyncpg" not in value:
@@ -183,7 +192,8 @@ class ReportingSettings(BaseModel):
     file_storage_enabled: bool = Field(True, description="Enable file storage of reports")
     slack_enabled: bool = Field(False, description="Enable Slack delivery (future feature)")
 
-    @validator("recipients", pre=True)
+    @field_validator("recipients", mode="before")
+    @classmethod
     def _parse_recipients(cls, value):  # noqa: D401, ANN001
         """Allow comma separated strings in environment variables."""
         if isinstance(value, list):
@@ -210,6 +220,14 @@ class AgentSettings(BaseModel):
 class Settings(BaseSettings):
     """Top-level application settings container."""
 
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        env_file_encoding="utf-8",
+        env_nested_delimiter="__",
+        case_sensitive=False,
+        extra="ignore",
+    )
+
     canny: CannySettings = Field(default_factory=CannySettings)
     jira: JiraSettings = Field(default_factory=JiraSettings)
     xai: XAISettings = Field(default_factory=XAISettings)
@@ -218,14 +236,6 @@ class Settings(BaseSettings):
     email: EmailSettings = Field(default_factory=EmailSettings)
     file_storage: FileStorageSettings = Field(default_factory=FileStorageSettings)
     agent: AgentSettings = Field(default_factory=AgentSettings)
-
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        env_nested_delimiter="__",
-        case_sensitive=False,
-        extra="ignore",
-    )
 
     environment: Literal["local", "dev", "staging", "production"] = Field(
         "local", description="Deployment environment identifier"
@@ -236,24 +246,57 @@ class Settings(BaseSettings):
         description="Logging level applied across the stack",
     )
 
-    canny: CannySettings
-    jira: JiraSettings
-    xai: XAISettings
-    database: DatabaseSettings
-    reporting: ReportingSettings = Field(
-        default_factory=ReportingSettings,
-        description="Reporting/digest configuration",
-    )
-    agents: AgentSettings = Field(
-        default_factory=AgentSettings,
-        description="Global agent execution parameters",
-    )
-
 
 @lru_cache
 def get_settings() -> Settings:
     """Return a cached Settings instance for reuse across the app."""
-    return Settings()
+    try:
+        return Settings()
+    except (SettingsError, Exception) as e:
+        # If there's a parsing error with nested settings, try to manually construct them
+        import os
+        
+        if "jira" in str(e).lower() and ("parsing" in str(e).lower() or "json" in str(e).lower()):
+            # Manually construct Settings by explicitly loading nested models
+            # This works around pydantic-settings trying to parse the entire nested object from a single env var
+            canny = CannySettings(
+                api_key=os.getenv("CANNY__API_KEY", os.getenv("CANNY_API_KEY", "")),
+                subdomain=os.getenv("CANNY__SUBDOMAIN", os.getenv("CANNY_SUBDOMAIN", "")),
+                board_id=os.getenv("CANNY__BOARD_ID", os.getenv("CANNY_BOARD_ID", "")),
+            )
+            
+            jira = JiraSettings(
+                server_url=os.getenv("JIRA__SERVER_URL", os.getenv("JIRA_SERVER_URL", "http://localhost:8000")),
+                project_key=os.getenv("JIRA__PROJECT_KEY", os.getenv("JIRA_PROJECT_KEY", "PROJ")),
+            )
+            
+            xai = XAISettings(
+                api_key=os.getenv("XAI__API_KEY", os.getenv("XAI_API_KEY", "")),
+            )
+            
+            database = DatabaseSettings(
+                url=os.getenv("DATABASE_URL", "postgresql+asyncpg://user:pass@localhost/db"),
+            )
+            
+            # Create a Settings instance with explicit nested models
+            # This bypasses the automatic env parsing that's causing issues
+            settings = Settings.model_construct(
+                canny=canny,
+                jira=jira,
+                xai=xai,
+                database=database,
+                reporting=ReportingSettings(),
+                email=EmailSettings(),
+                file_storage=FileStorageSettings(),
+                agent=AgentSettings(),
+                environment=os.getenv("ENVIRONMENT", "local"),
+                debug=os.getenv("DEBUG", "false").lower() == "true",
+                log_level=os.getenv("LOG_LEVEL", "INFO"),
+            )
+            
+            return settings
+        else:
+            raise
 
 
 __all__ = [

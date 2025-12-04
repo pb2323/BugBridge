@@ -6,21 +6,19 @@ FastAPI endpoints for managing and querying feedback posts from Canny.io.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import List, Optional
 from uuid import UUID
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 
+from bugbridge.api.dependencies import get_authenticated_user, require_admin
 from bugbridge.api.exceptions import NotFoundError
+from bugbridge.agents.collection import collect_feedback_batch
+from bugbridge.database.connection import get_session
 from pydantic import BaseModel, Field
 from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from fastapi import Depends
-
-from bugbridge.api.dependencies import get_authenticated_user
-from bugbridge.database.connection import get_session
 from bugbridge.database.models import (
     AnalysisResult,
     FeedbackPost as DBFeedbackPost,
@@ -72,9 +70,24 @@ class FeedbackListResponse(BaseModel):
     total_pages: int
 
 
+class FeedbackRefreshResponse(BaseModel):
+    """Response model for feedback refresh operation."""
+
+    success: bool = Field(..., description="Whether the refresh succeeded")
+    collected_count: int = Field(..., description="Number of new posts collected")
+    processed_count: int = Field(0, description="Number of posts processed through the workflow")
+    successful_processing: int = Field(0, description="Number of posts successfully analyzed")
+    jira_tickets_created: int = Field(0, description="Number of Jira tickets created")
+    timestamp: datetime = Field(..., description="Time the refresh completed")
+    error: Optional[str] = Field(
+        None, description="Error message if the refresh failed or was partial"
+    )
+
+
 @router.get("", response_model=FeedbackListResponse, status_code=status.HTTP_200_OK)
 async def list_feedback_posts(
     current_user = Depends(get_authenticated_user),
+    session: AsyncSession = Depends(get_session),
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     page_size: int = Query(20, ge=1, le=100, description="Number of items per page"),
     board_ids: Optional[str] = Query(None, description="Comma-separated list of board IDs to filter by"),
@@ -104,7 +117,7 @@ async def list_feedback_posts(
 
     Supports searching in title and content fields.
     """
-    async with get_session() as session:
+    try:
         # Build base query
         query = select(DBFeedbackPost)
 
@@ -247,19 +260,95 @@ async def list_feedback_posts(
             page_size=page_size,
             total_pages=total_pages,
         )
+    except Exception as e:
+        logger.error(f"Error fetching feedback posts: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch feedback posts: {str(e)}"
+        )
+
+
+@router.post("/refresh", response_model=FeedbackRefreshResponse, status_code=status.HTTP_200_OK)
+async def refresh_feedback_posts(
+    current_user = Depends(require_admin),
+) -> FeedbackRefreshResponse:
+    """
+    Refresh feedback posts from Canny.io and process them through the workflow.
+
+    This endpoint:
+    - Calls the Feedback Collection Agent to fetch posts from Canny
+    - Skips posts that already exist in the database
+    - Stores only newly discovered posts
+    - Automatically runs bug detection, sentiment analysis, and priority scoring
+    - Creates Jira tickets for high-priority items (priority >= 50)
+
+    Returns detailed statistics about collection and processing results.
+    """
+    try:
+        logger.info("Starting manual feedback refresh and workflow processing")
+        
+        result = await collect_feedback_batch(
+            board_id=None,  # Use default board from config
+            limit=100,  # Reasonable batch size for manual refresh
+            status=None,  # All statuses
+            process_through_workflow=True,  # Automatically process through workflow
+        )
+
+        timestamp_str = result.get("timestamp")
+        timestamp = (
+            datetime.fromisoformat(timestamp_str)
+            if isinstance(timestamp_str, str)
+            else datetime.utcnow()
+        )
+
+        if not result.get("success", False):
+            error_msg = result.get("error", "Unknown error during feedback refresh")
+            logger.error(f"Feedback refresh failed: {error_msg}")
+            return FeedbackRefreshResponse(
+                success=False,
+                collected_count=int(result.get("collected_count", 0) or 0),
+                processed_count=int(result.get("processed_count", 0) or 0),
+                successful_processing=int(result.get("successful_processing", 0) or 0),
+                jira_tickets_created=int(result.get("jira_tickets_created", 0) or 0),
+                timestamp=timestamp,
+                error=error_msg,
+            )
+
+        logger.info(
+            f"Feedback refresh completed: {result.get('collected_count')} collected, "
+            f"{result.get('processed_count')} processed, "
+            f"{result.get('jira_tickets_created')} Jira tickets created"
+        )
+
+        return FeedbackRefreshResponse(
+            success=True,
+            collected_count=int(result.get("collected_count", 0) or 0),
+            processed_count=int(result.get("processed_count", 0) or 0),
+            successful_processing=int(result.get("successful_processing", 0) or 0),
+            jira_tickets_created=int(result.get("jira_tickets_created", 0) or 0),
+            timestamp=timestamp,
+            error=None,
+        )
+    except Exception as e:
+        logger.error(f"Error refreshing feedback posts: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to refresh feedback posts: {str(e)}",
+        )
 
 
 @router.get("/{post_id}", response_model=FeedbackPostResponse, status_code=status.HTTP_200_OK)
 async def get_feedback_post(
     post_id: UUID,
     current_user = Depends(get_authenticated_user),
+    session: AsyncSession = Depends(get_session),
 ) -> FeedbackPostResponse:
     """
     Get detailed information about a specific feedback post.
 
     Includes analysis results and linked Jira ticket information.
     """
-    async with get_session() as session:
+    try:
         # Get feedback post
         query = select(DBFeedbackPost).where(DBFeedbackPost.id == post_id)
         result = await session.execute(query)
@@ -303,11 +392,236 @@ async def get_feedback_post(
             jira_ticket_key=jira_ticket.jira_issue_key if jira_ticket else None,
             jira_ticket_status=jira_ticket.status if jira_ticket else None,
         )
+    except NotFoundError:
+        raise
+    except Exception as e:
+        logger.error(f"Error fetching feedback post {post_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to fetch feedback post: {str(e)}"
+        )
+
+
+class FeedbackProcessResponse(BaseModel):
+    """Response model for processing existing posts."""
+
+    success: bool = Field(..., description="Whether the processing succeeded")
+    total_unprocessed: int = Field(..., description="Total number of unprocessed posts found")
+    processed_count: int = Field(..., description="Number of posts processed")
+    successful_processing: int = Field(..., description="Number of posts successfully analyzed")
+    jira_tickets_created: int = Field(..., description="Number of Jira tickets created")
+    timestamp: datetime = Field(..., description="Time the processing completed")
+    error: Optional[str] = Field(
+        None, description="Error message if the processing failed or was partial"
+    )
+
+
+@router.post("/process-existing", response_model=FeedbackProcessResponse, status_code=status.HTTP_200_OK)
+async def process_existing_feedback_posts(
+    current_user = Depends(require_admin),
+    session: AsyncSession = Depends(get_session),
+    limit: Optional[int] = Query(None, ge=1, description="Maximum number of posts to process (default: all)"),
+) -> FeedbackProcessResponse:
+    """
+    Process all existing unprocessed feedback posts through the workflow.
+
+    This endpoint:
+    - Finds all feedback posts that don't have analysis results yet
+    - Processes each through bug detection, sentiment analysis, and priority scoring
+    - Creates Jira tickets for high-priority items (priority >= 50)
+    
+    Use this to backfill analysis for posts that were collected before the workflow was enabled.
+    """
+    from bugbridge.agents.collection import process_post_through_workflow
+    from bugbridge.database.models import AnalysisResult
+    from sqlalchemy.orm import selectinload
+    
+    try:
+        logger.info("Starting processing of existing unprocessed feedback posts")
+        
+        # Find all posts without analysis results
+        query = (
+            select(DBFeedbackPost)
+            .outerjoin(AnalysisResult, DBFeedbackPost.id == AnalysisResult.feedback_post_id)
+            .where(AnalysisResult.id.is_(None))
+            .options(selectinload(DBFeedbackPost.analysis_results))
+        )
+        
+        result = await session.execute(query)
+        unprocessed_posts = result.unique().scalars().all()
+        total_unprocessed = len(unprocessed_posts)
+        
+        if limit:
+            unprocessed_posts = unprocessed_posts[:limit]
+        
+        logger.info(
+            f"Found {total_unprocessed} unprocessed posts"
+            + (f" (processing first {len(unprocessed_posts)})" if limit else "")
+        )
+        
+        if not unprocessed_posts:
+            logger.info("No unprocessed posts found")
+            return FeedbackProcessResponse(
+                success=True,
+                total_unprocessed=0,
+                processed_count=0,
+                successful_processing=0,
+                jira_tickets_created=0,
+                timestamp=datetime.now(UTC),
+                error=None,
+            )
+        
+        # Process each post
+        processing_results = []
+        
+        for db_post in unprocessed_posts:
+            try:
+                # Convert DB model to Pydantic model
+                from bugbridge.models.feedback import FeedbackPost as PydanticFeedbackPost
+                from pydantic import HttpUrl
+                
+                url = HttpUrl(db_post.url) if db_post.url else None
+                pydantic_post = PydanticFeedbackPost(
+                    post_id=db_post.canny_post_id,
+                    board_id=db_post.board_id,
+                    title=db_post.title,
+                    content=db_post.content,
+                    author_id=db_post.author_id,
+                    author_name=db_post.author_name,
+                    created_at=db_post.created_at,
+                    updated_at=db_post.updated_at,
+                    votes=db_post.votes,
+                    comments_count=db_post.comments_count,
+                    status=db_post.status,
+                    url=url,
+                    tags=db_post.tags or [],
+                    collected_at=db_post.collected_at,
+                )
+                
+                # Process through workflow
+                result = await process_post_through_workflow(pydantic_post)
+                processing_results.append(result)
+                
+            except Exception as e:
+                logger.error(
+                    f"Failed to process post {db_post.canny_post_id}: {str(e)}",
+                    exc_info=True,
+                )
+                processing_results.append({
+                    "success": False,
+                    "post_id": db_post.canny_post_id,
+                    "error": str(e),
+                })
+        
+        successful_count = sum(1 for r in processing_results if r.get("success"))
+        jira_tickets_created = sum(1 for r in processing_results if r.get("jira_ticket_id"))
+        
+        logger.info(
+            f"Processing complete: {successful_count}/{len(processing_results)} successful, "
+            f"{jira_tickets_created} Jira tickets created"
+        )
+        
+        return FeedbackProcessResponse(
+            success=True,
+            total_unprocessed=total_unprocessed,
+            processed_count=len(processing_results),
+            successful_processing=successful_count,
+            jira_tickets_created=jira_tickets_created,
+            timestamp=datetime.now(UTC),
+            error=None,
+        )
+        
+    except Exception as e:
+        logger.error(f"Error processing existing feedback posts: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process existing feedback posts: {str(e)}",
+        )
+
+
+@router.post("/{post_id}/process", response_model=FeedbackProcessResponse, status_code=status.HTTP_200_OK)
+async def process_single_feedback_post(
+    post_id: str,
+    current_user = Depends(require_admin),
+    session: AsyncSession = Depends(get_session),
+) -> FeedbackProcessResponse:
+    """
+    Process a single feedback post through the workflow.
+
+    This endpoint:
+    - Finds the specified feedback post by ID
+    - Processes it through bug detection, sentiment analysis, and priority scoring
+    - Creates a Jira ticket if priority >= 50
+    - Can reprocess posts that were already analyzed
+    
+    Useful for reprocessing individual posts or triggering analysis for specific posts.
+    """
+    from bugbridge.agents.collection import process_post_through_workflow
+    from bugbridge.models.feedback import FeedbackPost as PydanticFeedbackPost
+    
+    try:
+        logger.info(f"Processing single feedback post: {post_id}")
+        
+        # Find the post
+        result = await session.execute(
+            select(DBFeedbackPost).where(DBFeedbackPost.id == post_id)
+        )
+        db_post = result.scalar_one_or_none()
+        
+        if not db_post:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Feedback post not found: {post_id}"
+            )
+        
+        # Convert to Pydantic model
+        pydantic_post = PydanticFeedbackPost(
+            post_id=db_post.canny_post_id,
+            board_id=db_post.board_id,
+            title=db_post.title,
+            content=db_post.content,
+            author_id=db_post.author_id,
+            author_name=db_post.author_name,
+            votes=db_post.votes,
+            comments_count=db_post.comments_count,
+            status=db_post.status,
+            url=db_post.url,
+            tags=db_post.tags or [],
+            created_at=db_post.created_at,
+            updated_at=db_post.updated_at,
+        )
+        
+        # Process through workflow
+        result = await process_post_through_workflow(pydantic_post)
+        
+        success = result.get("success", False)
+        jira_ticket_created = 1 if result.get("jira_ticket_id") else 0
+        
+        return FeedbackProcessResponse(
+            success=success,
+            total_unprocessed=1,
+            processed_count=1,
+            successful_processing=1 if success else 0,
+            jira_tickets_created=jira_ticket_created,
+            timestamp=datetime.now(UTC),
+            error=result.get("error") if not success else None,
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error processing feedback post {post_id}: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to process feedback post: {str(e)}",
+        )
 
 
 __all__ = [
     "router",
     "FeedbackPostResponse",
     "FeedbackListResponse",
+    "FeedbackRefreshResponse",
+    "FeedbackProcessResponse",
 ]
 

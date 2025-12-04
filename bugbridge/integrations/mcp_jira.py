@@ -334,7 +334,7 @@ class MCPJiraClient:
         else:
             full_tool_name = f"{MCP_TOOL_PREFIX}{tool_name}"
 
-        logger.debug(f"Calling MCP tool: {full_tool_name} with arguments: {json.dumps(arguments, default=str)}")
+        logger.info(f"Calling MCP tool: {full_tool_name} with arguments: {json.dumps(arguments, default=str)[:500]}")
 
         try:
             # Call the MCP tool through the session
@@ -486,9 +486,12 @@ class MCPJiraClient:
         logger.info(f"Creating Jira issue in project {ticket_data.project_key}: {ticket_data.summary}")
 
         # Prepare additional_fields with priority, labels, and custom metadata
-        additional_fields: Dict[str, Any] = {
-            "priority": {"name": ticket_data.priority},
-        }
+        additional_fields: Dict[str, Any] = {}
+        
+        # Note: Next-gen Jira projects may not support priority field via API
+        # Skip priority field to avoid errors with next-gen projects
+        # if ticket_data.priority:
+        #     additional_fields["priority"] = {"name": ticket_data.priority}
 
         if ticket_data.labels:
             additional_fields["labels"] = ticket_data.labels
@@ -816,6 +819,15 @@ class MCPJiraClient:
             if "/rest/api/" in url:
                 url = url.replace("/rest/api/3/issue/", "/browse/")
 
+        # Extract issue_type (can be string or dict with "name")
+        issue_type_data = issue_data.get("issue_type")
+        if isinstance(issue_type_data, dict):
+            issue_type = issue_type_data.get("name", "Task")
+        elif isinstance(issue_type_data, str):
+            issue_type = issue_type_data
+        else:
+            issue_type = "Task"  # Default fallback
+
         # Merge metadata from ticket_create if provided
         sentiment_score = ticket_create.sentiment_score if ticket_create else None
         priority_score = ticket_create.priority_score if ticket_create else None
@@ -825,7 +837,7 @@ class MCPJiraClient:
             id=str(issue_data.get("id", "")),
             key=key,
             project_key=project_key or self._default_project_key or "UNKNOWN",
-            issue_type=issue_data.get("issue_type", "Bug") or "Bug",
+            issue_type=issue_type,
             priority=priority,
             status=status,
             summary=issue_data.get("summary", ""),

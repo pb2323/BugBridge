@@ -24,6 +24,7 @@ import {
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
 import { SkeletonCard } from '../../../components/common/SkeletonLoader';
+import { getJiraTicketUrl } from '@/lib/jira-utils';
 
 export default function FeedbackDetailPage() {
   const params = useParams();
@@ -218,7 +219,9 @@ export default function FeedbackDetailPage() {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-500">Ticket Key</span>
                       <a
-                        href={`/jira-tickets/${post.jira_ticket_key}`}
+                        href={getJiraTicketUrl(post.jira_ticket_key)}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="text-sm font-medium text-indigo-600 hover:text-indigo-900"
                       >
                         {post.jira_ticket_key}

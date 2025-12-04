@@ -38,6 +38,26 @@ export interface FeedbackListResponse {
   total_pages: number;
 }
 
+export interface FeedbackRefreshResponse {
+  success: boolean;
+  collected_count: number;
+  processed_count: number;
+  successful_processing: number;
+  jira_tickets_created: number;
+  timestamp: string;
+  error?: string | null;
+}
+
+export interface FeedbackProcessResponse {
+  success: boolean;
+  total_unprocessed: number;
+  processed_count: number;
+  successful_processing: number;
+  jira_tickets_created: number;
+  timestamp: string;
+  error?: string | null;
+}
+
 export interface FeedbackListParams {
   page?: number;
   page_size?: number;
@@ -68,6 +88,39 @@ export const feedbackApi = {
    */
   get: async (postId: string): Promise<FeedbackPost> => {
     const response = await apiClient.get<FeedbackPost>(`/feedback/${postId}`);
+    return response.data;
+  },
+
+  /**
+   * Refresh feedback posts from Canny.io
+   *
+   * Triggers backend collection that fetches new posts and skips existing ones.
+   */
+  refresh: async (): Promise<FeedbackRefreshResponse> => {
+    const response = await apiClient.post<FeedbackRefreshResponse>('/feedback/refresh');
+    return response.data;
+  },
+
+  /**
+   * Process existing unprocessed feedback posts through the workflow
+   *
+   * Triggers analysis for posts that were collected but not yet processed.
+   * This includes bug detection, sentiment analysis, priority scoring, and Jira ticket creation.
+   */
+  processExisting: async (limit?: number): Promise<FeedbackProcessResponse> => {
+    const params = limit ? { limit } : {};
+    const response = await apiClient.post<FeedbackProcessResponse>('/feedback/process-existing', null, { params });
+    return response.data;
+  },
+
+  /**
+   * Process a single feedback post through the workflow
+   *
+   * Triggers analysis for a specific post, including bug detection, sentiment analysis,
+   * priority scoring, and Jira ticket creation. Can be used to reprocess posts.
+   */
+  processSingle: async (postId: string): Promise<FeedbackProcessResponse> => {
+    const response = await apiClient.post<FeedbackProcessResponse>(`/feedback/${postId}/process`);
     return response.data;
   },
 };

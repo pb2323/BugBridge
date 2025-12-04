@@ -24,7 +24,26 @@ apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     // Get token from localStorage (or secure storage)
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth_token');
+      // Try localStorage first (set by auth store)
+      let token = localStorage.getItem('auth_token');
+      
+      // Fallback: try to get from Zustand store if localStorage is empty
+      if (!token) {
+        try {
+          const authStorage = localStorage.getItem('auth-storage');
+          if (authStorage) {
+            const parsed = JSON.parse(authStorage);
+            if (parsed?.state?.token) {
+              token = parsed.state.token;
+              // Sync it to auth_token for future requests
+              localStorage.setItem('auth_token', token);
+            }
+          }
+        } catch (e) {
+          // Ignore parsing errors
+        }
+      }
+      
       if (token && config.headers) {
         config.headers.Authorization = `Bearer ${token}`;
       }

@@ -307,6 +307,34 @@ Each agent makes autonomous decisions using AI (XAI/Grok models) with determinis
 
 ---
 
+## Testing the Platform
+
+**📖 For comprehensive testing instructions, see [TESTING_GUIDE.md](./TESTING_GUIDE.md)**
+
+The testing guide includes:
+- Complete setup instructions
+- Backend testing procedures
+- Frontend/dashboard testing
+- Integration testing
+- End-to-end workflow testing
+- Troubleshooting guide
+
+### Quick Test Commands
+
+```bash
+# Run automated test script
+./test-platform.sh
+
+# Backend tests
+pytest tests/ -v
+
+# Dashboard tests
+cd dashboard && npm test
+
+# E2E tests
+cd dashboard && npm run test:e2e
+```
+
 ## Development
 
 ### Running Tests

@@ -16,6 +16,7 @@ import {
   XCircleIcon,
   ClockIcon,
 } from '@heroicons/react/24/outline';
+import { getJiraTicketUrl } from '@/lib/jira-utils';
 
 export interface FeedbackPost {
   id: string;
@@ -46,9 +47,11 @@ interface FeedbackTableProps {
   sortBy?: string;
   sortOrder?: 'asc' | 'desc';
   onSort?: (field: string) => void;
+  onProcess?: (postId: string) => void;
+  processingPostId?: string | null;
 }
 
-export function FeedbackTable({ posts, sortBy, sortOrder, onSort }: FeedbackTableProps) {
+export function FeedbackTable({ posts, sortBy, sortOrder, onSort, onProcess, processingPostId }: FeedbackTableProps) {
   const getSortIcon = (field: string) => {
     if (sortBy !== field) {
       return null;
@@ -186,7 +189,7 @@ export function FeedbackTable({ posts, sortBy, sortOrder, onSort }: FeedbackTabl
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap">
-                  {post.priority_score !== undefined ? (
+                  {post.priority_score !== undefined && post.priority_score !== null ? (
                     <span
                       className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(
                         post.priority_score
@@ -202,7 +205,9 @@ export function FeedbackTable({ posts, sortBy, sortOrder, onSort }: FeedbackTabl
                 <td className="px-6 py-4 whitespace-nowrap">
                   {post.jira_ticket_key ? (
                     <a
-                      href={`/jira-tickets/${post.jira_ticket_key}`}
+                      href={getJiraTicketUrl(post.jira_ticket_key)}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-sm text-indigo-600 hover:text-indigo-900"
                     >
                       {post.jira_ticket_key}
@@ -218,12 +223,23 @@ export function FeedbackTable({ posts, sortBy, sortOrder, onSort }: FeedbackTabl
                   </div>
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  <Link
-                    href={`/feedback/${post.id}`}
-                    className="text-indigo-600 hover:text-indigo-900"
-                  >
-                    View
-                  </Link>
+                  <div className="flex items-center justify-end gap-3">
+                    <Link
+                      href={`/feedback/${post.id}`}
+                      className="text-indigo-600 hover:text-indigo-900"
+                    >
+                      View
+                    </Link>
+                    {onProcess && (
+                      <button
+                        onClick={() => onProcess(post.id)}
+                        disabled={processingPostId === post.id}
+                        className="text-green-600 hover:text-green-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                      >
+                        {processingPostId === post.id ? 'Processing...' : 'Process'}
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))
