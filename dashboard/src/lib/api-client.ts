@@ -59,11 +59,24 @@ apiClient.interceptors.request.use(
 apiClient.interceptors.response.use(
   (response) => response,
   (error: AxiosError) => {
-    // Handle 401 Unauthorized - redirect to login
+    // Handle 401 Unauthorized
     if (error.response?.status === 401) {
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth_token');
-        window.location.href = '/login';
+      const url = error.config?.url || '';
+      
+      // Don't auto-logout for auth endpoints (let them handle it)
+      if (!url.includes('/auth/')) {
+        if (typeof window !== 'undefined') {
+          // Check if we're on the login page already
+          const isOnLoginPage = window.location.pathname.includes('/login');
+          
+          // Only logout and redirect if not already on login page
+          // This prevents logout loops during session restore
+          if (!isOnLoginPage) {
+            localStorage.removeItem('auth_token');
+            const { useAuthStore } = require('../store/auth-store');
+            useAuthStore.getState().logout();
+          }
+        }
       }
     }
     return Promise.reject(error);

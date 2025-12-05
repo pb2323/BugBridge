@@ -25,6 +25,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { SkeletonCard } from '../../../components/common/SkeletonLoader';
 import { getJiraTicketUrl } from '@/lib/jira-utils';
+import { getCannyPostUrl } from '@/lib/canny-utils';
 
 export default function FeedbackDetailPage() {
   const params = useParams();
@@ -122,22 +123,32 @@ export default function FeedbackDetailPage() {
                 <ArrowLeftIcon className="h-6 w-6" />
               </Link>
               <div>
-                <h1 className="text-3xl font-bold text-gray-900">{post.title}</h1>
+                <h1 className="text-3xl font-bold text-gray-900">
+                  <a
+                    href={getCannyPostUrl(post.canny_post_id, post.title, post.url)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-gray-900 hover:text-indigo-600"
+                  >
+                    {post.title}
+                  </a>
+                </h1>
                 <p className="mt-1 text-sm text-gray-500">
                   Collected {formatDistanceToNow(new Date(post.collected_at), { addSuffix: true })}
                 </p>
               </div>
             </div>
-            {post.url && (
-              <a
-                href={post.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
-              >
-                View on Canny
-              </a>
-            )}
+            <a
+              href={getCannyPostUrl(post.canny_post_id, post.title, post.url)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+              View on Canny
+            </a>
           </div>
 
           {/* Main Content */}

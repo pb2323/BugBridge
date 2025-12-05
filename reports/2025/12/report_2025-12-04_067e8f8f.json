@@ -1,0 +1,83 @@
+{
+  "metrics": {
+    "date": "2025-12-04 00:00:00+00:00",
+    "new_issues_count": 23,
+    "bugs_count": 14,
+    "feature_requests_count": 6,
+    "bugs_percentage": 60.86956521739131,
+    "sentiment_distribution": {
+      "Positive": 1,
+      "Neutral": 1,
+      "Negative": 2,
+      "Frustrated": 11,
+      "Angry": 0
+    },
+    "priority_items": [
+      {
+        "title": "Payment processing failed for all credit card transactions",
+        "priority_score": 95,
+        "priority": "Critical",
+        "post_id": "691e6df6c8971ec0cdee0ef3"
+      },
+      {
+        "title": "Mobile app crashes on iOS 17 - affects entire user base",
+        "priority_score": 92,
+        "priority": "Critical",
+        "post_id": "691e6e0d834e80edec9b6ea6"
+      },
+      {
+        "title": "Login completely broken - 500 error on authentication page",
+        "priority_score": 85,
+        "priority": "High",
+        "post_id": "691e6dfb2328448a4d9d4958"
+      },
+      {
+        "title": "This is ridiculous - losing patience with constant bugs",
+        "priority_score": 78,
+        "priority": "High",
+        "post_id": "691e6e060fc802c6717bac2e"
+      },
+      {
+        "title": "User data not saving - all changes lost after logout",
+        "priority_score": 77,
+        "priority": "High",
+        "post_id": "691e6df9657e644722db8b8e"
+      },
+      {
+        "title": "Export functionality broken - downloads corrupted files",
+        "priority_score": 75,
+        "priority": "High",
+        "post_id": "691e6dfe94c677fe409091a7"
+      },
+      {
+        "title": "Search feature returns incorrect results",
+        "priority_score": 75,
+        "priority": "High",
+        "post_id": "691e6e00e5098fa6af828ea6"
+      },
+      {
+        "title": "Extremely disappointed with recent update - app is now unusable",
+        "priority_score": 72,
+        "priority": "High",
+        "post_id": "691e6e04604e22f0495d86e8"
+      },
+      {
+        "title": "API rate limits too restrictive - blocking integration",
+        "priority_score": 68,
+        "priority": "Medium",
+        "post_id": "691e6e0b94c677fe40909e5b"
+      },
+      {
+        "title": "Comments are not working",
+        "priority_score": 65,
+        "priority": "Medium",
+        "post_id": "691d7c0a58a681e83ef06510"
+      }
+    ],
+    "tickets_created": 13,
+    "tickets_resolved": 2,
+    "average_response_time_hours": 0.09244561982905983,
+    "resolution_rate": 15.384615384615385,
+    "average_resolution_time_hours": 1.1732451383333333
+  }
+}

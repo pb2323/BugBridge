@@ -53,8 +53,6 @@ class CannySettings(BaseModel):
 
 class JiraSettings(BaseModel):
     """Configuration for the Jira MCP integration."""
-    
-    model_config = {"json_schema_extra": {"env_prefix": "JIRA__"}}
 
     server_url: HttpUrl = Field(..., description="Base URL of the Jira MCP server")
     instance_url: Optional[HttpUrl] = Field(
@@ -263,11 +261,14 @@ def get_settings() -> Settings:
                 api_key=os.getenv("CANNY__API_KEY", os.getenv("CANNY_API_KEY", "")),
                 subdomain=os.getenv("CANNY__SUBDOMAIN", os.getenv("CANNY_SUBDOMAIN", "")),
                 board_id=os.getenv("CANNY__BOARD_ID", os.getenv("CANNY_BOARD_ID", "")),
+                admin_user_id=os.getenv("CANNY__ADMIN_USER_ID"),
             )
             
+            instance_url_str = os.getenv("JIRA__INSTANCE_URL")
             jira = JiraSettings(
                 server_url=os.getenv("JIRA__SERVER_URL", os.getenv("JIRA_SERVER_URL", "http://localhost:8000")),
                 project_key=os.getenv("JIRA__PROJECT_KEY", os.getenv("JIRA_PROJECT_KEY", "PROJ")),
+                instance_url=instance_url_str if instance_url_str else None,
             )
             
             xai = XAISettings(
@@ -278,6 +279,24 @@ def get_settings() -> Settings:
                 url=os.getenv("DATABASE_URL", "postgresql+asyncpg://user:pass@localhost/db"),
             )
             
+            # Construct EmailSettings from environment variables
+            smtp_password_str = os.getenv("EMAIL__SMTP_PASSWORD") or os.getenv("EMAIL_SMTP_PASSWORD")
+            from_email = os.getenv("EMAIL__FROM_EMAIL") or os.getenv("EMAIL_FROM_EMAIL")
+            smtp_username = os.getenv("EMAIL__SMTP_USERNAME") or os.getenv("EMAIL_SMTP_USERNAME")
+            
+            # If username not set but from_email is, use from_email as username (common for Gmail)
+            if not smtp_username and from_email:
+                smtp_username = from_email
+            
+            email = EmailSettings(
+                smtp_host=os.getenv("EMAIL__SMTP_HOST") or os.getenv("EMAIL_SMTP_HOST"),
+                smtp_port=int(os.getenv("EMAIL__SMTP_PORT", os.getenv("EMAIL_SMTP_PORT", "587"))),
+                smtp_username=smtp_username,
+                smtp_password=SecretStr(smtp_password_str) if smtp_password_str else None,
+                use_tls=os.getenv("EMAIL__USE_TLS", os.getenv("EMAIL_USE_TLS", "true")).lower() == "true",
+                from_email=from_email,
+            )
+            
             # Create a Settings instance with explicit nested models
             # This bypasses the automatic env parsing that's causing issues
             settings = Settings.model_construct(
@@ -286,7 +305,7 @@ def get_settings() -> Settings:
                 xai=xai,
                 database=database,
                 reporting=ReportingSettings(),
-                email=EmailSettings(),
+                email=email,
                 file_storage=FileStorageSettings(),
                 agent=AgentSettings(),
                 environment=os.getenv("ENVIRONMENT", "local"),

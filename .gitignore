@@ -56,3 +56,9 @@ dashboard/pnpm-lock.yaml
 logs/
 temp/
 tmp/
+
+# Environment file backups
+.env.backup
+.env.bak
+*.env.backup
+*.env.bak

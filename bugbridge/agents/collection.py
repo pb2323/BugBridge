@@ -440,6 +440,7 @@ async def _save_workflow_results_to_db(post_id: str, state: Dict[str, Any]) -> N
             
             if not db_ticket:
                 # Create new Jira ticket record
+                # Note: Assignee will be populated when user clicks "Refresh from Jira"
                 jira_ticket_url = state.get("jira_ticket_url")
                 jira_ticket_status = state.get("jira_ticket_status", "To Do")
                 
@@ -464,6 +465,7 @@ async def _save_workflow_results_to_db(post_id: str, state: Dict[str, Any]) -> N
                     jira_project_key=project_key,
                     status=jira_ticket_status,
                     priority=recommended_jira_priority or "Medium",
+                    assignee=None,  # Will be populated when refreshing from Jira
                     created_at=datetime.now(UTC),
                     updated_at=datetime.now(UTC),
                 )

@@ -793,12 +793,41 @@ class MCPJiraClient:
         elif isinstance(issue_data.get("status"), str):
             status = issue_data["status"]
 
-        # Extract assignee
+        # Extract assignee - handle various response formats
         assignee = None
-        if isinstance(issue_data.get("assignee"), dict):
-            assignee = issue_data["assignee"].get("displayName") or issue_data["assignee"].get("emailAddress") or issue_data["assignee"].get("accountId")
-        elif isinstance(issue_data.get("assignee"), str):
-            assignee = issue_data["assignee"]
+        assignee_data = issue_data.get("assignee")
+        
+        if assignee_data:
+            if isinstance(assignee_data, dict):
+                # Try multiple possible fields in order of preference
+                assignee = (
+                    assignee_data.get("displayName") or
+                    assignee_data.get("name") or
+                    assignee_data.get("emailAddress") or
+                    assignee_data.get("accountId") or
+                    assignee_data.get("key")
+                )
+            elif isinstance(assignee_data, str):
+                assignee = assignee_data
+            elif assignee_data:  # Not None, but not dict or str - try to convert
+                assignee = str(assignee_data)
+        
+        # Also check if assignee is in a nested fields structure (some MCP responses use this)
+        if not assignee:
+            fields = issue_data.get("fields", {})
+            if isinstance(fields, dict):
+                assignee_data = fields.get("assignee")
+                if assignee_data:
+                    if isinstance(assignee_data, dict):
+                        assignee = (
+                            assignee_data.get("displayName") or
+                            assignee_data.get("name") or
+                            assignee_data.get("emailAddress") or
+                            assignee_data.get("accountId") or
+                            assignee_data.get("key")
+                        )
+                    elif isinstance(assignee_data, str):
+                        assignee = assignee_data
 
         # Extract reporter
         reporter = None

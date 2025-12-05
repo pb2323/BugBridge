@@ -7,6 +7,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { DashboardLayout } from '../../components/layout/DashboardLayout';
 import { ErrorBoundary } from '../../components/common/ErrorBoundary';
 import { JiraTicketsTable } from '../../components/jira/JiraTicketsTable';
@@ -14,13 +15,18 @@ import { JiraTicketFilters, JiraTicketFilters as JiraTicketFiltersType } from '.
 import { Pagination } from '../../components/feedback/Pagination';
 import { useJiraList } from '../../hooks/useJira';
 import { SkeletonCard } from '../../components/common/SkeletonLoader';
+import { LoadingSpinner } from '../../components/common/LoadingSpinner';
+import { jiraApi } from '../../services/api/jira';
 
 export default function JiraTicketsPage() {
+  const queryClient = useQueryClient();
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [sortBy, setSortBy] = useState<string>('created_at');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
   const [filters, setFilters] = useState<JiraTicketFiltersType>({});
+  const [refreshStatus, setRefreshStatus] = useState<string | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   // Convert filters to API params
   const apiParams = useMemo(() => {
@@ -57,6 +63,31 @@ export default function JiraTicketsPage() {
   }, [page, pageSize, sortBy, sortOrder, filters]);
 
   const { data, isLoading, error, refetch } = useJiraList(apiParams);
+
+  const refreshMutation = useMutation({
+    mutationFn: () => jiraApi.refresh(),
+    onMutate: () => {
+      setIsRefreshing(true);
+      setRefreshStatus('Fetching latest ticket updates from Jira...');
+    },
+    onSuccess: (data) => {
+      // Invalidate Jira tickets list so it refetches with updated data
+      queryClient.invalidateQueries({ queryKey: ['jira-tickets'] });
+      
+      // Show success message with statistics
+      const message = `✅ Successfully refreshed! Updated: ${data.tickets_updated} tickets, Failed: ${data.tickets_failed} out of ${data.total_tickets} total`;
+      setRefreshStatus(message);
+      setIsRefreshing(false);
+      
+      // Clear message after 8 seconds
+      setTimeout(() => setRefreshStatus(null), 8000);
+    },
+    onError: (error: any) => {
+      setRefreshStatus(`❌ Error: ${error?.response?.data?.detail || 'Failed to refresh Jira tickets'}`);
+      setIsRefreshing(false);
+      setTimeout(() => setRefreshStatus(null), 8000);
+    },
+  });
 
   const handleSort = (field: string) => {
     if (sortBy === field) {
@@ -117,6 +148,15 @@ export default function JiraTicketsPage() {
     <ErrorBoundary>
       <DashboardLayout>
         <div className="space-y-6">
+          {/* Refresh Status Message */}
+          {refreshStatus && (
+            <div className={`rounded-md p-4 ${refreshStatus.startsWith('❌') ? 'bg-red-50 border border-red-200' : 'bg-green-50 border border-green-200'}`}>
+              <p className={refreshStatus.startsWith('❌') ? 'text-red-800 text-sm' : 'text-green-800 text-sm'}>
+                {refreshStatus}
+              </p>
+            </div>
+          )}
+
           {/* Header */}
           <div className="flex items-center justify-between">
             <div>
@@ -126,6 +166,25 @@ export default function JiraTicketsPage() {
               </p>
             </div>
             <div className="flex items-center gap-4">
+              <button
+                onClick={() => refreshMutation.mutate()}
+                disabled={isRefreshing || refreshMutation.isPending || refreshMutation.isLoading}
+                className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-indigo-600 transition-all"
+              >
+                {isRefreshing || refreshMutation.isPending || refreshMutation.isLoading ? (
+                  <>
+                    <LoadingSpinner size="sm" />
+                    <span>Refreshing from Jira...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                    </svg>
+                    <span>Refresh from Jira</span>
+                  </>
+                )}
+              </button>
               <select
                 value={pageSize}
                 onChange={(e) => handlePageSizeChange(parseInt(e.target.value))}

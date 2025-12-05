@@ -17,6 +17,7 @@ import {
   ClockIcon,
 } from '@heroicons/react/24/outline';
 import { getJiraTicketUrl } from '@/lib/jira-utils';
+import { getCannyPostUrl } from '@/lib/canny-utils';
 
 export interface FeedbackPost {
   id: string;
@@ -159,7 +160,16 @@ export function FeedbackTable({ posts, sortBy, sortOrder, onSort, onProcess, pro
                   {formatDistanceToNow(new Date(post.collected_at), { addSuffix: true })}
                 </td>
                 <td className="px-6 py-4">
-                  <div className="text-sm font-medium text-gray-900 max-w-xs truncate">{post.title}</div>
+                  <div className="max-w-xs truncate">
+                    <a
+                      href={getCannyPostUrl(post.canny_post_id, post.title, post.url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-sm font-medium text-indigo-600 hover:text-indigo-900"
+                    >
+                      {post.title}
+                    </a>
+                  </div>
                   <div className="text-xs text-gray-500 mt-1">
                     {post.author_name || 'Unknown'} • {post.comments_count} comments
                   </div>

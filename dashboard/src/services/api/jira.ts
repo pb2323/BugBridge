@@ -44,6 +44,15 @@ export interface JiraTicketListParams {
   sort_order?: 'asc' | 'desc';
 }
 
+export interface JiraTicketRefreshResponse {
+  success: boolean;
+  tickets_updated: number;
+  tickets_failed: number;
+  total_tickets: number;
+  errors: string[];
+  timestamp: string;
+}
+
 export const jiraApi = {
   /**
    * List Jira tickets with filtering and pagination
@@ -58,6 +67,16 @@ export const jiraApi = {
    */
   get: async (ticketId: string): Promise<JiraTicket> => {
     const response = await apiClient.get<JiraTicket>(`/jira-tickets/${ticketId}`);
+    return response.data;
+  },
+
+  /**
+   * Refresh all Jira tickets from the Jira instance via MCP server.
+   * Fetches latest status, priority, assignee, and other fields from Jira.
+   */
+  refresh: async (limit?: number): Promise<JiraTicketRefreshResponse> => {
+    const params = limit ? { limit } : {};
+    const response = await apiClient.post<JiraTicketRefreshResponse>('/jira-tickets/refresh', null, { params });
     return response.data;
   },
 };

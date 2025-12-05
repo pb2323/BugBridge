@@ -10,6 +10,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '../../store/auth-store';
 import { LoadingSpinner } from '../common/LoadingSpinner';
+import { useSessionRestore } from '../../hooks/useSessionRestore';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -19,17 +20,24 @@ interface ProtectedRouteProps {
 export function ProtectedRoute({ children, requireAdmin = false }: ProtectedRouteProps) {
   const router = useRouter();
   const { isAuthenticated, user } = useAuthStore();
+  const { isRestoring } = useSessionRestore();
 
   useEffect(() => {
+    // Wait for session restoration to complete before checking auth
+    if (isRestoring) {
+      return;
+    }
+
     if (!isAuthenticated) {
       router.push('/login');
     } else if (requireAdmin && user?.role !== 'admin') {
       // Redirect to dashboard if not admin
       router.push('/dashboard');
     }
-  }, [isAuthenticated, user, requireAdmin, router]);
+  }, [isAuthenticated, isRestoring, user, requireAdmin, router]);
 
-  if (!isAuthenticated) {
+  // Show loading while restoring session or checking authentication
+  if (isRestoring || !isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <LoadingSpinner />

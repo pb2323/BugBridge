@@ -6,7 +6,7 @@ FastAPI endpoints for querying Jira tickets linked to feedback.
 
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import UTC, datetime
 from typing import List, Optional
 from uuid import UUID
 
@@ -17,13 +17,16 @@ from pydantic import BaseModel, Field
 from sqlalchemy import and_, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from bugbridge.api.dependencies import get_authenticated_user
-from bugbridge.database.connection import get_session
+from bugbridge.api.dependencies import get_authenticated_user, require_admin
+from bugbridge.database.connection import get_session, get_session_context
 from bugbridge.database.models import (
     FeedbackPost as DBFeedbackPost,
     JiraTicket as DBJiraTicket,
 )
+from bugbridge.config import get_settings
+from bugbridge.integrations.mcp_jira import MCPJiraClient, MCPJiraError, MCPJiraNotFoundError
 from bugbridge.utils.logging import get_logger
+from bugbridge.utils.notifications import is_resolution_status, notify_customer_on_resolution
 
 logger = get_logger(__name__)
 
@@ -258,9 +261,176 @@ async def get_jira_ticket(
         )
 
 
+class JiraTicketRefreshResponse(BaseModel):
+    """Response model for Jira ticket refresh operation."""
+
+    success: bool = Field(..., description="Whether the refresh succeeded")
+    tickets_updated: int = Field(..., description="Number of tickets successfully updated")
+    tickets_failed: int = Field(..., description="Number of tickets that failed to update")
+    total_tickets: int = Field(..., description="Total number of tickets processed")
+    errors: List[str] = Field(default_factory=list, description="List of error messages for failed tickets")
+    timestamp: datetime = Field(..., description="Time the refresh completed")
+
+
+@router.post("/refresh", response_model=JiraTicketRefreshResponse, status_code=status.HTTP_200_OK)
+async def refresh_jira_tickets(
+    current_user = Depends(require_admin),
+    session: AsyncSession = Depends(get_session),
+    limit: Optional[int] = Query(None, ge=1, description="Maximum number of tickets to refresh (default: all)"),
+) -> JiraTicketRefreshResponse:
+    """
+    Refresh all Jira tickets from the Jira instance via MCP server.
+    
+    This endpoint fetches the latest status, priority, assignee, and other fields
+    from Jira and updates the database records accordingly.
+    
+    Requires admin privileges.
+    """
+    try:
+        logger.info("Starting Jira tickets refresh from MCP server")
+        
+        # Get all Jira tickets from database
+        query = select(DBJiraTicket)
+        if limit:
+            query = query.limit(limit)
+        
+        result = await session.execute(query)
+        all_tickets = result.scalars().all()
+        
+        total_tickets = len(all_tickets)
+        tickets_updated = 0
+        tickets_failed = 0
+        errors: List[str] = []
+        
+        if total_tickets == 0:
+            logger.info("No Jira tickets found to refresh")
+            return JiraTicketRefreshResponse(
+                success=True,
+                tickets_updated=0,
+                tickets_failed=0,
+                total_tickets=0,
+                errors=[],
+                timestamp=datetime.now(UTC),
+            )
+        
+        # Initialize Jira client
+        jira_client = MCPJiraClient(auto_connect=False)
+        
+        try:
+            # Connect to MCP server
+            await jira_client.connect()
+            
+            # Get resolution statuses from config
+            settings = get_settings()
+            resolution_statuses = settings.jira.resolution_done_statuses
+            
+            # Process each ticket
+            for db_ticket in all_tickets:
+                try:
+                    # Store previous status before updating
+                    previous_status = db_ticket.status
+                    
+                    # Fetch latest data from Jira
+                    logger.debug(f"Refreshing ticket {db_ticket.jira_issue_key}")
+                    latest_ticket = await jira_client.get_issue(db_ticket.jira_issue_key)
+                    
+                    # Update database record with latest data
+                    db_ticket.status = latest_ticket.status
+                    db_ticket.priority = latest_ticket.priority
+                    db_ticket.assignee = latest_ticket.assignee
+                    db_ticket.updated_at = datetime.now(UTC)
+                    
+                    # Check if ticket is resolved using config resolution statuses
+                    current_status = latest_ticket.status
+                    is_resolved = is_resolution_status(current_status, resolution_statuses)
+                    
+                    # Update resolved_at if ticket is resolved
+                    if is_resolved:
+                        if db_ticket.resolved_at is None:
+                            db_ticket.resolved_at = datetime.now(UTC)
+                            # Ticket was just resolved for the first time
+                            # Trigger notification (will be committed with other changes)
+                            try:
+                                await notify_customer_on_resolution(
+                                    session=session,
+                                    db_ticket=db_ticket,
+                                    previous_status=previous_status,
+                                    current_status=current_status,
+                                )
+                            except Exception as notification_error:
+                                # Log notification error but don't fail the refresh
+                                logger.error(
+                                    f"Failed to send notification for ticket {db_ticket.jira_issue_key}: {str(notification_error)}",
+                                    exc_info=True,
+                                )
+                    else:
+                        # If ticket is reopened, clear resolved_at
+                        db_ticket.resolved_at = None
+                    
+                    tickets_updated += 1
+                    logger.info(
+                        f"Successfully refreshed ticket {db_ticket.jira_issue_key}: status={latest_ticket.status}, assignee={latest_ticket.assignee}",
+                        extra={
+                            "ticket_key": db_ticket.jira_issue_key,
+                            "status": latest_ticket.status,
+                            "assignee": latest_ticket.assignee,
+                            "priority": latest_ticket.priority,
+                        }
+                    )
+                    
+                except MCPJiraNotFoundError:
+                    error_msg = f"Ticket {db_ticket.jira_issue_key} not found in Jira"
+                    errors.append(error_msg)
+                    tickets_failed += 1
+                    logger.warning(error_msg)
+                    
+                except MCPJiraError as e:
+                    error_msg = f"Failed to refresh ticket {db_ticket.jira_issue_key}: {str(e)}"
+                    errors.append(error_msg)
+                    tickets_failed += 1
+                    logger.error(error_msg, exc_info=True)
+                    
+                except Exception as e:
+                    error_msg = f"Unexpected error refreshing ticket {db_ticket.jira_issue_key}: {str(e)}"
+                    errors.append(error_msg)
+                    tickets_failed += 1
+                    logger.error(error_msg, exc_info=True)
+            
+            # Commit all updates
+            await session.commit()
+            
+        finally:
+            # Always disconnect
+            try:
+                await jira_client.disconnect()
+            except Exception:
+                pass  # Ignore disconnect errors
+        
+        logger.info(
+            f"Jira tickets refresh completed: {tickets_updated} updated, {tickets_failed} failed out of {total_tickets} total"
+        )
+        
+        return JiraTicketRefreshResponse(
+            success=tickets_failed == 0,
+            tickets_updated=tickets_updated,
+            tickets_failed=tickets_failed,
+            total_tickets=total_tickets,
+            errors=errors[:10],  # Limit to first 10 errors
+            timestamp=datetime.now(UTC),
+        )
+        
+    except Exception as e:
+        logger.error(f"Error refreshing Jira tickets: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to refresh Jira tickets: {str(e)}"
+        )
+
+
 __all__ = [
     "router",
     "JiraTicketResponse",
     "JiraTicketListResponse",
+    "JiraTicketRefreshResponse",
 ]
 

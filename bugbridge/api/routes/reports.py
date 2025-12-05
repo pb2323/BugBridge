@@ -67,7 +67,7 @@ class ReportGenerationResponse(BaseModel):
 @router.post("/generate", response_model=ReportGenerationResponse, status_code=status.HTTP_200_OK)
 async def generate_report(
     request: ReportGenerationRequest,
-    current_user = Depends(require_admin),
+    current_user = Depends(require_admin()),
 ) -> ReportGenerationResponse:
     """
     Generate a custom report with optional filters.
@@ -133,7 +133,38 @@ async def generate_report(
 
         # Generate report
         agent = get_reporting_agent()
-        result = await agent.generate_daily_report(report_date=request.report_date, filters=filters)
+        
+        # Debug logging for current_user
+        logger.info(
+            f"Current user object type: {type(current_user)}, has email: {hasattr(current_user, 'email')}",
+            extra={
+                "user_type": str(type(current_user)),
+                "user_id": str(getattr(current_user, 'id', None)),
+                "username": getattr(current_user, 'username', None),
+                "email_attr_exists": hasattr(current_user, 'email'),
+                "email_value": getattr(current_user, 'email', None),
+            }
+        )
+        
+        # Get current user's email for notification
+        user_email = current_user.email if hasattr(current_user, 'email') and current_user.email else None
+        
+        if hasattr(current_user, 'username'):
+            logger.info(
+                f"Generating report for user: {current_user.username}, email: {user_email}",
+                extra={"username": current_user.username, "user_email": user_email},
+            )
+        else:
+            logger.info(
+                f"Generating report, email: {user_email}",
+                extra={"user_email": user_email},
+            )
+        
+        result = await agent.generate_daily_report(
+            report_date=request.report_date,
+            filters=filters,
+            user_email=user_email,
+        )
 
         return ReportGenerationResponse(
             success=True,
@@ -288,7 +319,7 @@ async def get_report(
 @router.post("/generate/workflow", response_model=ReportGenerationResponse, status_code=status.HTTP_200_OK)
 async def generate_report_workflow(
     request: ReportGenerationRequest,
-    current_user = Depends(require_admin),
+    current_user = Depends(require_admin()),
 ) -> ReportGenerationResponse:
     """
     Generate a report using the LangGraph workflow.

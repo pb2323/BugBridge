@@ -6,7 +6,6 @@
 
 'use client';
 
-import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import {
   ArrowUpIcon,
@@ -17,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { JiraTicket } from '../../services/api/jira';
 import { getJiraTicketUrl } from '@/lib/jira-utils';
+import { getCannyPostUrl } from '@/lib/canny-utils';
 
 interface JiraTicketsTableProps {
   tickets: JiraTicket[];
@@ -153,13 +153,19 @@ export function JiraTicketsTable({ tickets, sortBy, sortOrder, onSort }: JiraTic
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {ticket.feedback_post_title ? (
-                    <Link
-                      href={`/feedback/${ticket.feedback_post_id}`}
+                    <a
+                      href={getCannyPostUrl(
+                        ticket.feedback_post_canny_id || '',
+                        ticket.feedback_post_title,
+                        null
+                      )}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       className="text-indigo-600 hover:text-indigo-900 truncate max-w-xs block"
                       title={ticket.feedback_post_title}
                     >
                       {ticket.feedback_post_title}
-                    </Link>
+                    </a>
                   ) : (
                     <span className="text-xs text-gray-400">-</span>
                   )}

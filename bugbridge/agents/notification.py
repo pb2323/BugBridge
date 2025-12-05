@@ -81,11 +81,9 @@ def create_notification_prompt(
         f"**Status:** {resolution_status}",
     ]
 
-    if jira_ticket_id:
-        prompt_parts.append(f"**Jira Ticket:** {jira_ticket_id}")
-
+    # Include URL for linking but not the ticket ID/key to avoid it appearing in the message
     if jira_ticket_url:
-        prompt_parts.append(f"**Jira Ticket URL:** {jira_ticket_url}")
+        prompt_parts.append(f"**Resolution Tracking URL:** {jira_ticket_url} (use this for linking, but do not show ticket ID in message)")
 
     if resolution_summary:
         prompt_parts.append(f"**Resolution Summary:** {resolution_summary}")
@@ -97,19 +95,37 @@ def create_notification_prompt(
             "Generate a professional reply that:",
             "- Thanks the customer for their feedback",
             "- Confirms the issue has been resolved",
-            "- Provides link to Jira ticket (if applicable)",
+            "- Does NOT mention the Jira ticket ID or key (e.g., do not write 'Ticket ECS-48' or 'ECS-48')",
+            "- Can include a generic link to view resolution details (optional, but do not show ticket ID in the link text)",
             "- Maintains a professional and friendly tone",
             "- Is concise but informative",
             "",
-            "## Reply Format",
-            "Use Markdown formatting. Include:",
+            "## Output Format",
+            "You MUST respond with ONLY a JSON object with these fields:",
+            "```json",
+            "{",
+            '  "greeting": "Opening greeting thanking the customer",',
+            '  "resolution_confirmation": "Confirmation that issue is resolved",',
+            '  "jira_ticket_link": "Markdown link without ticket ID (optional, use generic text like \"view the resolution\" or \"tracking system\")",',
+            '  "resolution_summary": "Brief summary of fix (optional)",',
+            '  "closing_message": "Closing thank you message",',
+            '  "full_reply": "Complete formatted reply in Markdown"',
+            "}",
+            "```",
+            "",
+            "The full_reply field should contain the complete, formatted message that will",
+            "be posted to Canny.io. Use Markdown formatting. Include:",
             "- A warm greeting thanking the customer",
             "- Clear confirmation of resolution",
-            "- Jira ticket link (if available) in format: [Ticket {ticket_key}]({ticket_url})",
+            "- Optional generic link to view resolution (if available), but DO NOT include ticket ID/key in the link text",
+            "  Example link format: [view the resolution]({ticket_url}) or [tracking system]({ticket_url})",
+            "  DO NOT use formats like: [Ticket ECS-48](url) or [ECS-48](url)",
             "- Optional brief summary if resolution details are available",
             "- A closing thank you message",
             "",
-            "Generate the reply now:",
+            "IMPORTANT: Do not mention or display the Jira ticket ID or key anywhere in the message.",
+            "",
+            "Generate the JSON response now (no additional text, ONLY the JSON object):",
         ]
     )
 
@@ -277,7 +293,7 @@ class NotificationAgent(BaseAgent):
         reply = await self.generate_structured_output(
             prompt=prompt,
             schema=CustomerReply,
-            system_message="You are a professional customer communication specialist. Generate warm, helpful, and concise replies.",
+            system_message="You are a professional customer communication specialist. You MUST respond with valid JSON only. Generate warm, helpful, and concise replies in JSON format.",
         )
 
         # Ensure full_reply is populated if not provided

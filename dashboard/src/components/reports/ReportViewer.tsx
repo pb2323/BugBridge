@@ -10,6 +10,7 @@ import { useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
 import { DocumentTextIcon, ArrowDownTrayIcon } from '@heroicons/react/24/outline';
+import { ReportMetricsCharts } from './ReportMetricsCharts';
 
 interface ReportViewerProps {
   report: {
@@ -19,6 +20,7 @@ interface ReportViewerProps {
     generated_at?: string;
     content?: string;
     summary?: string;
+    metrics?: any;
   };
   onExport?: (format: 'pdf' | 'csv') => void;
 }
@@ -85,6 +87,14 @@ export function ReportViewer({ report, onExport }: ReportViewerProps) {
           </div>
         </div>
       </div>
+
+      {/* Metrics Overview Charts */}
+      {report.metrics && (
+        <div className="px-6 py-6 border-b border-gray-200">
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Metrics Overview</h2>
+          <ReportMetricsCharts metrics={report.metrics} />
+        </div>
+      )}
 
       {/* Content */}
       <div ref={contentRef} className="px-6 py-6 prose max-w-none">

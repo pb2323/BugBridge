@@ -21,7 +21,7 @@ from bugbridge.database.models import (
     JiraTicket as DBJiraTicket,
     Report,
 )
-from bugbridge.database.connection import get_session
+from bugbridge.database.connection import get_session_context
 from bugbridge.integrations.email import EmailService, EmailDeliveryError
 from bugbridge.integrations.file_storage import FileStorageService, FileStorageError
 from bugbridge.integrations.xai import ChatXAI
@@ -450,7 +450,18 @@ def create_report_prompt(metrics: DailyMetrics) -> str:
             "",
             "Maintain a professional, data-driven tone. Focus on actionable insights and trends.",
             "",
-            "Generate the report summary now:",
+            "## Output Format",
+            "**IMPORTANT**: You MUST respond with ONLY a valid JSON object. Do NOT include any Markdown formatting, explanations, or text outside the JSON.",
+            "",
+            "JSON Schema:",
+            "{",
+            '  "executive_summary": "string (min 50 chars)",',
+            '  "key_insights": ["string", "string", "..."],',
+            '  "recommendations": ["string", "string", "..."],',
+            '  "summary_text": "string (min 100 chars)"',
+            "}",
+            "",
+            "Generate the JSON report summary now:",
         ]
     )
 
@@ -594,6 +605,7 @@ class ReportingAgent(BaseAgent):
         self,
         report_date: Optional[datetime] = None,
         filters: Optional[ReportFilters] = None,
+        user_email: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Generate daily summary report with optional filters.
@@ -601,6 +613,7 @@ class ReportingAgent(BaseAgent):
         Args:
             report_date: Date for which to generate report (defaults to yesterday).
             filters: Optional ReportFilters to customize the report.
+            user_email: Optional email address of the user who requested the report (for notification).
 
         Returns:
             Dictionary containing report data including metrics, summary, and formatted content.
@@ -619,7 +632,7 @@ class ReportingAgent(BaseAgent):
         )
 
         # Query daily metrics with filters
-        async with get_session() as session:
+        async with get_session_context() as session:
             metrics = await query_daily_metrics(session, report_date, filters=filters)
 
         # Generate natural language summary using XAI LLM
@@ -627,19 +640,19 @@ class ReportingAgent(BaseAgent):
         summary = await self.generate_structured_output(
             prompt=prompt,
             schema=ReportSummary,
-            system_message="You are a professional data analyst. Generate clear, concise, and actionable report summaries.",
+            system_message="You are a professional data analyst. You MUST respond with valid JSON only. Generate clear, concise, and actionable report summaries in JSON format.",
         )
 
         # Format report in Markdown
         report_content = format_report_markdown(metrics, summary)
 
         # Store report in database
-        async with get_session() as session:
+        async with get_session_context() as session:
             report = Report(
                 report_type="daily",
                 report_date=report_date,
                 report_content=report_content,
-                metrics=metrics.model_dump(),
+                metrics=metrics.model_dump(mode='json'),  # mode='json' converts datetime to ISO strings
             )
             session.add(report)
             await session.commit()
@@ -660,12 +673,13 @@ class ReportingAgent(BaseAgent):
             report_date=report_date,
             report_id=str(report.id),
             metrics=metrics.model_dump(),
+            user_email=user_email,
         )
 
         return {
             "report_id": str(report.id),
             "report_date": report_date,
-            "metrics": metrics.model_dump(),
+            "metrics": metrics.model_dump(mode='json'),  # mode='json' converts datetime to ISO strings
             "summary": summary.model_dump(),
             "content": report_content,
             "delivery": delivery_results,
@@ -677,6 +691,7 @@ class ReportingAgent(BaseAgent):
         report_date: datetime,
         report_id: str,
         metrics: Dict[str, Any],
+        user_email: Optional[str] = None,
     ) -> Dict[str, Any]:
         """
         Deliver report via configured channels (email, file storage, etc.).
@@ -686,6 +701,7 @@ class ReportingAgent(BaseAgent):
             report_date: Report date.
             report_id: Report ID.
             metrics: Report metrics dictionary.
+            user_email: Optional email address of the user who requested the report.
 
         Returns:
             Dictionary with delivery results for each channel.
@@ -701,22 +717,43 @@ class ReportingAgent(BaseAgent):
             reporting_settings = settings.reporting
 
             # Email delivery
+            # Determine recipients: user_email takes priority, then configured recipients
+            recipients = []
+            if user_email:
+                recipients.append(user_email)
             if reporting_settings.email_enabled and reporting_settings.recipients:
+                recipients.extend(reporting_settings.recipients)
+            
+            # Remove duplicates
+            recipients = list(set(recipients))
+            
+            logger.info(
+                f"Email delivery check - user_email: {user_email}, recipients: {recipients}, email_enabled: {reporting_settings.email_enabled}",
+                extra={
+                    "agent_name": self.name,
+                    "user_email": user_email,
+                    "recipients": recipients,
+                    "email_enabled": reporting_settings.email_enabled,
+                },
+            )
+            
+            if recipients:
                 try:
                     email_service = self._get_email_service(settings)
                     if email_service:
                         email_service.send_report_email(
-                            to_emails=reporting_settings.recipients,
+                            to_emails=recipients,
                             report_content=report_content,
                             report_date=report_date.strftime("%Y-%m-%d"),
                         )
                         delivery_results["email"]["success"] = True
                         logger.info(
-                            f"Sent report email to {len(reporting_settings.recipients)} recipient(s)",
+                            f"Sent report email to {len(recipients)} recipient(s)",
                             extra={
                                 "agent_name": self.name,
                                 "report_id": report_id,
-                                "recipients": reporting_settings.recipients,
+                                "recipients": recipients,
+                                "user_email": user_email,
                             },
                         )
                     else:
@@ -731,6 +768,8 @@ class ReportingAgent(BaseAgent):
                         },
                         exc_info=True,
                     )
+            else:
+                delivery_results["email"]["error"] = "No recipients configured"
 
             # File storage
             if reporting_settings.file_storage_enabled:
@@ -823,6 +862,29 @@ class ReportingAgent(BaseAgent):
             base_path=file_storage_settings.base_path,
             create_dirs=file_storage_settings.create_dirs,
         )
+
+    async def execute(self, state: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        Execute the reporting agent (required by BaseAgent).
+        
+        This is a placeholder implementation since ReportingAgent doesn't use
+        the standard state-based workflow pattern. It operates independently
+        to generate reports.
+
+        Args:
+            state: Not used for ReportingAgent (kept for compatibility).
+
+        Returns:
+            Dummy state (ReportingAgent doesn't modify workflow state).
+        """
+        # ReportingAgent doesn't use the standard state workflow
+        # It's invoked directly via generate_daily_report()
+        logger.warning(
+            "ReportingAgent.execute() called but this agent doesn't use state-based workflow. "
+            "Use generate_daily_report() directly instead.",
+            extra={"agent_name": self.name},
+        )
+        return state
 
     async def run(self, report_date: Optional[datetime] = None) -> Dict[str, Any]:
         """

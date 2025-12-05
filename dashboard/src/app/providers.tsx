@@ -11,11 +11,18 @@ import { QueryClientProvider } from '@tanstack/react-query';
 import { queryClient } from '../lib/query-client';
 import { initializeSessionManagement, clearSessionManagement } from '../middleware/auth';
 import { useAuthStore } from '../store/auth-store';
+import { useSessionRestore } from '../hooks/useSessionRestore';
 
 function SessionManager() {
   const { isAuthenticated } = useAuthStore();
+  const { isRestoring } = useSessionRestore();
 
   useEffect(() => {
+    // Wait for session restoration before initializing session management
+    if (isRestoring) {
+      return;
+    }
+
     if (isAuthenticated) {
       initializeSessionManagement();
     } else {
@@ -25,7 +32,7 @@ function SessionManager() {
     return () => {
       clearSessionManagement();
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isRestoring]);
 
   return null;
 }
