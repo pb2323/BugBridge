@@ -712,28 +712,79 @@ npm run test:e2e:headed
 
 ## 🎨 UI Screenshots & Features
 
+### Authentication
+
+![Login Page](./docs/screenshots/Login.png)
+*Secure login interface with role-based access control*
+
 ### Dashboard Overview
+
+![Dashboard Main View](./docs/screenshots/Dashboard.png)
+*Main dashboard with real-time metrics and analytics*
+
+![Dashboard Metrics](./docs/screenshots/Dashboard%202.png)
+*Interactive charts showing feedback trends and key performance indicators*
+
+**Features:**
 - Real-time metrics with auto-refresh
 - Interactive charts and visualizations
 - Quick access to burning issues
 
 ### Feedback Management
+
+![Feedback List](./docs/screenshots/Feedback%201.png)
+*Comprehensive feedback posts listing with filtering and search*
+
+![Feedback Details](./docs/screenshots/Feedback%201.5.png)
+*Detailed feedback view with AI analysis results*
+
+![Feedback Processing](./docs/screenshots/Feedback%202.png)
+*Feedback processing interface with priority scores and sentiment indicators*
+
+**Features:**
 - Searchable, filterable feedback list
 - Priority scores and sentiment indicators
 - One-click processing
 - Direct Canny.io integration
 
-### Jira Integration
+### Jira Tickets
+
+![Jira Tickets View](./docs/screenshots/Jira%20ticket%201.png)
+*Jira ticket tracking and management interface*
+
+![Jira Ticket Details](./docs/screenshots/jira%20ticket%202.png)
+*Detailed Jira ticket view with status tracking and links*
+
+**Features:**
 - Automatic ticket creation for high-priority items
 - Real-time status tracking
 - Bidirectional linking (Jira ↔ Canny)
 - Automatic customer notifications
 
 ### Reports
+
+![Reports List](./docs/screenshots/Reports%201.png)
+*Report generation and listing interface*
+
+![Report View](./docs/screenshots/Reports%202.png)
+*Detailed report view with metrics and visualizations*
+
+![Report Metrics](./docs/screenshots/Reports%203.png)
+*Visual metrics overview with charts and insights*
+
+**Features:**
 - Visual metrics overview with charts
 - AI-generated summaries and insights
 - HTML email delivery
 - Export capabilities
+
+### Configuration
+
+![Settings Page 1](./docs/screenshots/Config%201.png)
+*Configuration interface for managing platform settings*
+
+![Settings Page 2](./docs/screenshots/Config%202.png)
+*Advanced settings and integration configuration*
 
 ---
 
